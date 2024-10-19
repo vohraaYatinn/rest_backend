@@ -45,7 +45,7 @@ class CustomerManager:
                 Q(phone_number__icontains=search)
             ).annotate(total_orders=Count('order')).prefetch_related(active_addresses)
         else:
-            users = User.objects.all().annotate(total_orders=Count('order')).prefetch_related(active_addresses)
+            users = User.objects.all().annotate(total_orders=Count('user_order')).prefetch_related(active_addresses)
 
         return users
 
@@ -63,7 +63,7 @@ class CustomerManager:
     def get_dashboard_data(data):
         total_orders = Order.objects.count()
         total_revenue = Order.objects.aggregate(total_revenue=Sum('total_amount'))['total_revenue']
-        total_customers = User.objects.filter(order__isnull=False).distinct().count()
+        total_customers = User.objects.filter(user_order__isnull=False).distinct().count()
         return {
             'total_orders': total_orders,
             'total_revenue': total_revenue,

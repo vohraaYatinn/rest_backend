@@ -25,8 +25,6 @@ SECRET_KEY = "django-insecure-)0cgehmcqkvv4(ygbtc9n5w9m%h@su$k-qno2pe&uqv$^yrtky
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -37,9 +35,20 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'rest_framework',
+    'menu',
+    'orders',
+    'restaurant',
+    'usersApp',
+    'corsheaders',
 ]
 
+CORS_ALLOW_ALL_ORIGINS = True
+
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -54,7 +63,8 @@ ROOT_URLCONF = "rest_backend.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / 'templates']
+        ,
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -119,5 +129,22 @@ STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'jwtToken'
+]
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+ALLOWED_HOSTS = ["localhost", "192.168.29.217", "127.0.0.1","192.168.1.3", "192.168.1.7", "0.0.0.0", "16.170.252.56", "192.168.1.6", "192.168.29.217", "192.168.1.5"]

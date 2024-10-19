@@ -1,251 +1,138 @@
-
-from rest_framework.exceptions import ValidationError
-
-from adminpannel.models import AdminLogin
-from authentication.models import User, ManageKyc
-from banner.models import Banner, SuccessStory
-from referral.models import ReferralAdminPricing, Referral, LeadsUsers
-from services.models import ServicesType, ServicesWorking
-from wallet.models import Withdrawal
+from django.db import transaction
+from django.db.models import Q, Sum, F
 from django.utils import timezone
 from datetime import timedelta
 
-class AdminManager:
+from usersApp.models import Address
+from .models import Order, OrderHistory, UserCart, OrderItem
+
+
+class OrderManager:
 
     @staticmethod
-    def admin_check_login(data):
-        username = data.get('userId', False)
-        password = data.get('password', False)
-        check_login = AdminLogin.objects.filter(username=username, password=password).exists()
-        return check_login
+    def order_fetch(data):
+        day = data.get("day[label]", False)
+        if day == False:
+            day = "Today"
+        query = Q()
+
+        if day == "Today":
+            # Get the start and end of today
+            today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            today_end = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
+            query &= Q(ordered_at__range=(today_start, today_end))
+
+        elif day == "Yesterday":
+            # Get the start and end of yesterday
+            yesterday_start = (timezone.now() - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+            yesterday_end = (timezone.now() - timedelta(days=1)).replace(hour=23, minute=59, second=59, microsecond=999999)
+            query &= Q(ordered_at__range=(yesterday_start, yesterday_end))
+
+        # Fetch the orders based on the query
+        orders = Order.objects.select_related("address").prefetch_related("order_items", "order_items__item").filter(query).order_by("-ordered_at")
+        return orders
 
     @staticmethod
-    def fetch_referral_amount(data):
-        referral_amount = ReferralAdminPricing.objects.filter()[0].price
-        return referral_amount
+    @transaction.atomic
+    def order_status_change(data):
+        order_id = data.get("uuid", False)
+        status = data.get("status", False)
+
+        if not order_id or not status:
+            raise Exception("order_id or status is required")
+
+        orders = Order.objects.filter(uuid=order_id)
+        if not orders:
+            raise Exception("order id is invalid")
+        if orders[0].status == status:
+            raise Exception("order status is already updated")
+        orders[0].status = status
+        orders[0].save()
+        OrderHistory.objects.create(order=orders[0], status=status)
+
+        return orders
 
     @staticmethod
-    def change_referral_amount(data):
-        value = data.get('value', False)
-        if not value:
-            raise Exception("value not updated")
-        referral_amount = ReferralAdminPricing.objects.filter()[0]
-        referral_amount.price = value
-        referral_amount.save()
-
-
-    @staticmethod
-    def gwt_all_users(data):
-        all_users = User.objects.all().prefetch_related("wallet")
-        return all_users
+    def single_order_details(data):
+        order_uuid = data.get("uuid", False)
+        query = Q()
+        query &= Q(uuid=order_uuid) | Q(id=order_uuid)
+        if not order_uuid:
+            raise Exception("order_id is required")
+        orders = Order.objects.filter(query).select_related("user","address").prefetch_related("order_items", "order_items__item", "order_history")
+        return orders
 
     @staticmethod
-    def get_user_referrals(data):
-        user_id = data.get('userId', False)
-        if not user_id:
-            raise Exception("userId not updated")
-        referred_users = Referral.objects.filter(user__id=user_id).select_related("referred_user")
-        return referred_users
-
-    @staticmethod
-    def ban_user_by_admin(data):
-        user_id = data.get('userId', False)
-        if not user_id:
-            raise Exception("userId not updated")
-        req_user = User.objects.get(id=user_id)
-        req_user.is_active = not req_user.is_active
-        req_user.save()
-
-    @staticmethod
-    def delete_user_by_admin(data):
-        user_id = data.get('userId', False)
-        if not user_id:
-            raise Exception("userId not updated")
-        delete_user = User.objects.filter(id=user_id).delete()
-
-    @staticmethod
-    def handle_kyc_user(data):
-        kyc_user = ManageKyc.objects.filter(status="pending").select_related("user")
-        return kyc_user
-
-
-    @staticmethod
-    def get_single_kyc(data):
-        kyc_id = data.get('kycId', False)
-        kyc_user = ManageKyc.objects.filter(id=kyc_id).select_related("user")
-        return kyc_user
-
-
-    @staticmethod
-    def approval_rejection_of_kyc_user(data):
-        kyc_id = data.get('kycId', False)
-        action = data.get('action', False)
-        if not kyc_id or not action:
-            raise Exception("kycId or action is compulsory")
-        kyc_user = ManageKyc.objects.filter(id=kyc_id)
-        kyc_user[0].status = action
-        if action == "reject":
-            kyc_user[0].user.is_kyc_given = False
+    def add_to_cart(request, data):
+        user_id = request.user.id
+        menu = data.get("menuId", False)
+        quantity = data.get("quantity", False)
+        if not menu or not quantity:
+            raise Exception("order_id is required")
+        item = UserCart.objects.filter(user_id=user_id, item_id=menu)
+        if item:
+            item[0].quantity += quantity
+            item[0].save()
         else:
-            kyc_user[0].user.is_verified = True
-        kyc_user[0].user.save()
-
-        kyc_user[0].save()
-
+            UserCart.objects.create(user_id=user_id,item_id=menu, quantity=quantity)
 
     @staticmethod
-    def get_withdrawal_requests(data):
-        withdraw_request = Withdrawal.objects.filter(status="Pending").select_related("user")
-        return withdraw_request
-
-
-    @staticmethod
-    def approval_rejection_of_withdrawal_requests(data):
-        withdraw_id = data.get('WithdrawId', False)
-        action = data.get('action', False)
-        if not withdraw_id or not action:
-            raise Exception("WithdrawId or action is compulsory")
-        withdraw_req = Withdrawal.objects.filter(id=withdraw_id)
-        withdraw_req[0].status = action
-        withdraw_req[0].save()
-        return True
+    def fetch_cart(request, data):
+        user_id = request.user.id
+        cart_items = UserCart.objects.filter(user_id=user_id)
+        total_amount = cart_items.aggregate(
+            total=Sum(F('quantity') * F('item__price'))
+        )['total'] or 0
+        total_amount = round(total_amount, 2)
+        address = Address.objects.filter(user_id=user_id, is_active=True)
+        return cart_items, total_amount, address
 
     @staticmethod
-    def get_all_services(data):
-        services_list = ServicesType.objects.all()
-        return services_list
+    def cart_action(request, data):
+        user_id = request.user.id
+        cart_id = data.get("id", False)
+        action = data.get("action", False)
+        cart = UserCart.objects.filter(id=cart_id, user_id=user_id)
+        if not cart:
+            raise Exception("There is something issue with your cart")
+        if action == "decrement":
+            cart[0].quantity = cart[0].quantity - 1
+            if cart[0].quantity == 0:
+                cart[0].delete()
+            else:
+                cart[0].save()
 
-
-    @staticmethod
-    def add_services(data):
-        service_name = data.get('serviceName', False)
-        if not service_name:
-            raise Exception("Service name is compulsory")
-        check_service = ServicesType.objects.filter(service_name=service_name).exists()
-        if check_service:
-            raise Exception("service with this name already exists")
-        ServicesType.objects.create(service_name = service_name)
-
-
-    @staticmethod
-    def remove_services(data):
-        service_id = data.get('serviceId', False)
-        if not service_id:
-            raise Exception("service_id is compulsory")
-        ServicesType.objects.filter(id=service_id).delete()
+        elif action == "increment":
+            cart[0].quantity = cart[0].quantity + 1
+            cart[0].save()
+        elif action == "delete":
+            cart[0].delete()
 
     @staticmethod
-    def banner_update(data):
-        banner_number = data.get('bannerNumber', False)
-        banner_image = data.get('bannerImage', False)
-        if not banner_number or not banner_image:
-            raise Exception("banner number and banner image is compulsory")
-        req_banner = Banner.objects.filter()[0]
-        if banner_number == 1:
-            req_banner.banner_1 = banner_image
-        if banner_number == 2:
-            req_banner.banner_2 = banner_image
-        if banner_number == 3:
-            req_banner.banner_3 = banner_image
-        req_banner.save()
+    @transaction.atomic()
+    def place_order(request, data):
+        user_id = request.user.id
+        address = Address.objects.filter(user_id=user_id, is_active=True)
+        cart_items = UserCart.objects.filter(user_id=user_id)
+        total_amount = cart_items.aggregate(
+            total=Sum(F('quantity') * F('item__price'))
+        )['total'] or 0
+        total_amount = round(total_amount, 2)
+        order = Order.objects.create(user_id=user_id, address=address[0], total_amount=total_amount)
+        for items in cart_items:
+            OrderItem.objects.create(order=order, item=items.item, quantity=items.quantity)
+        UserCart.objects.filter(user_id=user_id).delete()
+        OrderHistory.objects.create(order=order)
 
     @staticmethod
-    def success_story_update(data):
-        story_number = data.get('storyNumber', False)
-        story_image = data.get('storyImage', False)
-        if not story_number or not story_image:
-            raise Exception("story number and story image is compulsory")
-        req_story = SuccessStory.objects.filter()[0]
-        if story_number == 1:
-            req_story.banner_1 = story_image
-        if story_number == 2:
-            req_story.banner_2 = story_image
-        if story_number == 3:
-            req_story.banner_3 = story_image
-        req_story.save()
-
-    @staticmethod
-    def get_banner_stories(data):
-        req_banner = Banner.objects.filter()[0]
-        req_story = SuccessStory.objects.filter()[0]
-        return req_banner, req_story
-
-
-    @staticmethod
-    def get_offers_related_services(data):
-        service_id = data.get('serviceId', False)
-        if not service_id:
-            raise Exception("service id is compulsory")
-        services_list = ServicesWorking.objects.filter(service_name__id=service_id)
-        return services_list
-
-
-    @staticmethod
-    def add_offers_related_services(data):
-        service_id = data.get('serviceId', False)
-        company_name = data.get('companyName', False)
-        earnings = data.get('earnings', False)
-        title = data.get('title', False)
-        description = data.get('description', False)
-        if not service_id or not company_name or not earnings or not title or not description:
-            raise Exception("Service name is compulsory")
-        ServicesWorking.objects.create(service_name_id=service_id, company_name=company_name, earnings=earnings,
-                                       title=title, description=description)
-    @staticmethod
-    def action_offers_related_services(data):
-        service_working_id = data.get('serviceWorkingId', False)
-        if not service_working_id:
-            raise Exception("Service id is compulsory")
-        check_service = ServicesWorking.objects.filter(id=service_working_id).delete()
-
-
-
-    @staticmethod
-    def fetch_dashboard_data(data):
-        male_count = User.objects.filter(gender='M').count()
-        female_count = User.objects.filter(gender='F').count()
-        other_count = User.objects.filter(gender='O').count()
-        referred_count = User.objects.filter(referred_by__isnull=False).count()
-        not_referred_count = User.objects.filter(referred_by__isnull=True).count()
-        now = timezone.now()
-
-        # Total number of users
-        total_users = User.objects.count()
-
-        if total_users == 0:
-            return {
-                'daily_active_percentage': 0,
-                'monthly_active_percentage': 0,
-                'yearly_active_percentage': 0
-            }
-
-        # Daily active users (users who logged in in the last 24 hours)
-        daily_active_users = User.objects.filter(last_login__gte=now - timedelta(days=1)).count()
-
-        # Monthly active users (users who logged in in the last 30 days)
-        monthly_active_users = User.objects.filter(last_login__gte=now - timedelta(days=30)).count()
-
-        # Yearly active users (users who logged in in the last 365 days)
-        yearly_active_users = User.objects.filter(last_login__gte=now - timedelta(days=365)).count()
-
-        # Calculate percentage values
-        daily_active_percentage = daily_active_users / total_users
-        monthly_active_percentage = monthly_active_users / total_users
-        yearly_active_percentage = yearly_active_users / total_users
-
-        return {
-            'male_count': male_count,
-            'female_count': female_count,
-            'other_count': other_count,
-            'referred_count': referred_count,
-            'not_referred_count': not_referred_count,
-            'daily_active_percentage': round(daily_active_percentage, 2),  # Rounded to 2 decimal places
-            'monthly_active_percentage': round(monthly_active_percentage, 2),
-            'yearly_active_percentage': round(yearly_active_percentage, 2),
-        }
-
-
-    @staticmethod
-    def fetch_leads_details(data):
-        get_leads = LeadsUsers.objects.filter().select_related("user")
-        return get_leads
+    def get_orders_customer(request, data):
+        user_id = request.user.id
+        status = data.get("status", False)
+        query = Q()
+        query &= Q(user_id=user_id)
+        if status == "ongoing":
+            query &= Q(status = "pending") | Q(status = "accepted") | Q(status = "Ondelivery")
+        elif status == "history":
+            query &= Q(status = "delivered") | Q(status = "cancelled")
+        return Order.objects.select_related("address").prefetch_related("order_items", "order_items__item").filter(
+            query).order_by("-ordered_at")

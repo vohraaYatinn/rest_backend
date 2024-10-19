@@ -1,4 +1,3 @@
-from tkinter import Menu
 from .models import Order, OrderItem, OrderHistory
 from django.contrib import admin
 

@@ -1,4 +1,3 @@
-from tkinter import Menu
 from .models import Category, MenuItem, MenuRecommendation
 from django.contrib import admin
 

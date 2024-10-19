@@ -1,4 +1,3 @@
-from tkinter import Menu
 from .models import User, Address
 from django.contrib import admin
 

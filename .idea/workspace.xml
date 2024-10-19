@@ -5,31 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="cdef3d3c-92c8-4628-b883-e74152036a7d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/rest_backend.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/manage.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/menu/manager.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/menu/serializers.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/menu/urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/orders/manager.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/orders/serializers.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/orders/urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rest_backend/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rest_backend/asgi.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rest_backend/settings.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rest_backend/urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/rest_backend/wsgi.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/restaurant/serializers.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/restaurant/urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/usersApp/custom_permission.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/usersApp/manager.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/usersApp/serializers.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/usersApp/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -131,23 +108,12 @@
       <workItem from="1728891938217" duration="9880000" />
       <workItem from="1728975218097" duration="8681000" />
       <workItem from="1729051731719" duration="12228000" />
-      <workItem from="1729140215081" duration="45217000" />
+      <workItem from="1729140215081" duration="46299000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/menu/views.py</url>
-          <line>120</line>
-          <option name="timeStamp" value="86" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/rest_backend$manage.coverage" NAME="manage Coverage Results" MODIFIED="1729322830839" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />

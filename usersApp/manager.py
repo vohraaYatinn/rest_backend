@@ -205,3 +205,11 @@ class CustomerManager:
         name = data.get('name', False)
         user =  User.objects.get(id=user)
 
+
+    @staticmethod
+    def get_single_customer_detail(data):
+        customer_id = data.get('customerId', False)
+        if not customer_id:
+            raise Exception("Customer id not provided")
+        user = User.objects.filter(id=customer_id).prefetch_related("addresses").prefetch_related("user_order", "user_order__order_items")
+        return user[0]

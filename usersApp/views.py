@@ -5,7 +5,8 @@ from rest_framework.views import APIView
 from menu.serializers import MenuItemSerializer, CategoryOnlySerializer, MenuRecommendationSerializer
 from usersApp.custom_permission import IsAdminAuth, IsUserAuth
 from usersApp.manager import CustomerManager
-from usersApp.serializers import UserSerializer, UserAddressSerializer, UserOnlyAddressSerializer, AddressUserSerializer
+from usersApp.serializers import UserSerializer, UserAddressSerializer, UserOnlyAddressSerializer, \
+    AddressUserSerializer, UserSingleSerializer
 
 
 class getAdminLogin(APIView):
@@ -105,6 +106,19 @@ class IsRestAvailable(APIView):
             return Response(str(err), 500)
 
 
+class singleCustomerFetch(APIView):
+    permission_classes = [IsAdminAuth]
+
+    @staticmethod
+    def get(request):
+        try:
+            data = request.query_params
+            customer_detail = CustomerManager.get_single_customer_detail(data)
+            serialized_data = UserSingleSerializer(customer_detail).data
+            return Response({"result": "success", "data": serialized_data}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)
 
 
 # --------------- customer --------------------

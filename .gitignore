@@ -1,0 +1,95 @@
+# Django specific
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+staticfiles/
+
+# Environment variables
+.env
+
+# macOS
+.DS_Store
+
+# Python
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.env
+.venv/
+venv/
+ENV/
+env/
+venv.bak/
+
+# VS Code
+.vscode/
+
+# Byte-compiled / optimized / DLL files
+*.py[cod]
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+.nox/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+__pycache__/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath
+.sage.py
+
+# Environments
+.env/
+.venv/
+env.bak/
+
+# Spyder project settings
+.spyderproject
+
+# Rope project settings
+.ropeproject

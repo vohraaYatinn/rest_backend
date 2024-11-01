@@ -124,3 +124,18 @@ class FetchCustomerApp(APIView):
             return Response(str(err), 500)
 
 
+class fetchNotificationUser(APIView):
+    permission_classes = [IsUserAuth]
+
+    @staticmethod
+    def get(request):
+        try:
+            data = request.query_params
+            order_details = OrderManager.get_orders_customer(request, data)
+            serializer_data = OrderSerializer(order_details, many=True).data
+            return Response({"result" : "success", "data":serializer_data}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)
+
+

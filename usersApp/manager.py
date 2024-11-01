@@ -5,7 +5,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from menu.models import Category, MenuRecommendation
-from orders.models import Order
+from orders.models import Order, NotificationUser
 from restaurant.models import Restaurant
 from usersApp.models import User, Address
 from django.contrib.auth.hashers import make_password
@@ -213,3 +213,9 @@ class CustomerManager:
             raise Exception("Customer id not provided")
         user = User.objects.filter(id=customer_id).prefetch_related("addresses").prefetch_related("user_order", "user_order__order_items")
         return user[0]
+
+
+    @staticmethod
+    def get_notification_user(request, data):
+        user_id = request.user.id
+        return NotificationUser.objects.filter(user_id=user_id).select_related("order")

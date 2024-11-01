@@ -40,6 +40,7 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='order_items', on_delete=models.CASCADE)
     item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
+    price = models.FloatField()
 
     def __str__(self):
         return f"{self.quantity} x {self.item.name}"
@@ -65,3 +66,10 @@ class OrderHistory(models.Model):
 class AdminNotification(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='admin_notification')
     description = models.TextField()
+
+
+class NotificationUser(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_notifications")
+    message = models.TextField()
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='user_notification_order', null=True)
+    stamp_at = models.DateTimeField(auto_now_add=True, null=True)

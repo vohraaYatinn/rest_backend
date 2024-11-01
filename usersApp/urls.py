@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from usersApp.views import getCustomer, getAdminLogin, getAdminDashboard, AdminCharts, IsRestAvailable, SignupCustomer, \
     LoginCustomer, CustomerAppDashboard, getCustomerAddresses, addNewAddressCustomer, deleteAddressCustomer, \
-    defaultAddress, personalProfile, singleCustomerFetch
+    defaultAddress, personalProfile, singleCustomerFetch, getUserNotification
 
 urlpatterns = [
     # ------------ admin ----------------
@@ -26,6 +26,7 @@ urlpatterns = [
     path(r'fetch-user-details/', personalProfile.as_view(), name="fetch-user-details"),
     path(r'edit-user-details/', personalProfile.as_view(), name="edit-user-details"),
     path(r'fetch-user-notification/', personalProfile.as_view(), name="fetch-user-notification"),
+    path(r'get-user-notification/', getUserNotification.as_view(), name="get-user-notification"),
 
 ]
 

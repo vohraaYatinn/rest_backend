@@ -4,10 +4,16 @@ from django.utils import timezone
 from datetime import timedelta
 
 from usersApp.models import Address
-from .models import Order, OrderHistory, UserCart, OrderItem
+from .models import Order, OrderHistory, UserCart, OrderItem, NotificationUser
 
 
 class OrderManager:
+
+    @staticmethod
+    def add_user_notification(user, message, order=False):
+        notification = NotificationUser.objects.create(user_id=user, message=message)
+        notification.order = order
+        notification.save()
 
     @staticmethod
     def order_fetch(data):
@@ -113,16 +119,17 @@ class OrderManager:
     def place_order(request, data):
         user_id = request.user.id
         address = Address.objects.filter(user_id=user_id, is_active=True)
-        cart_items = UserCart.objects.filter(user_id=user_id)
+        cart_items = UserCart.objects.filter(user_id=user_id).select_related("item")
         total_amount = cart_items.aggregate(
             total=Sum(F('quantity') * F('item__price'))
         )['total'] or 0
         total_amount = round(total_amount, 2)
         order = Order.objects.create(user_id=user_id, address=address[0], total_amount=total_amount)
         for items in cart_items:
-            OrderItem.objects.create(order=order, item=items.item, quantity=items.quantity)
+            OrderItem.objects.create(order=order, item=items.item, quantity=items.quantity, price=items.item.price)
         UserCart.objects.filter(user_id=user_id).delete()
         OrderHistory.objects.create(order=order)
+        OrderManager.add_user_notification(user_id, "Order placed Successfully", order=order)
 
     @staticmethod
     def get_orders_customer(request, data):

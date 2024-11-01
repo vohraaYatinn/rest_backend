@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import OrderViewSet, OrderView, OrderStatusChange, FetchSingleOrder, AddToCart, FetchCustomerCart, \
-    IncrementCartAction, PlaceOrder, FetchCustomerApp
+    IncrementCartAction, PlaceOrder, FetchCustomerApp, fetchNotificationUser
 
 router = DefaultRouter()
 router.register(r'orders', OrderViewSet)
@@ -20,4 +20,6 @@ urlpatterns = [
     path(r'place-order/', PlaceOrder.as_view(), name="place-order"),
     path(r'fetch-customer-order/', FetchCustomerApp.as_view(), name="fetch-customer-order"),
     path(r'get-single-order/', FetchCustomerApp.as_view(), name="get-single-order"),
+    path(r'get-order-notification/', fetchNotificationUser.as_view(), name="get-order-notification"),
+
 ]

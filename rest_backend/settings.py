@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'restaurant',
     'usersApp',
     'corsheaders',
+    'channels',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from menu.models import MenuItem
-from orders.models import Order, OrderItem
+from orders.models import Order, OrderItem, NotificationUser
 from .models import User, Address
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -64,4 +64,11 @@ class UserSingleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
+        fields = "__all__"
+
+class getNotificationSerializer(serializers.ModelSerializer):
+    order = OrdersSerializer()
+
+    class Meta:
+        model = NotificationUser
         fields = "__all__"

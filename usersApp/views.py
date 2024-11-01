@@ -6,7 +6,7 @@ from menu.serializers import MenuItemSerializer, CategoryOnlySerializer, MenuRec
 from usersApp.custom_permission import IsAdminAuth, IsUserAuth
 from usersApp.manager import CustomerManager
 from usersApp.serializers import UserSerializer, UserAddressSerializer, UserOnlyAddressSerializer, \
-    AddressUserSerializer, UserSingleSerializer
+    AddressUserSerializer, UserSingleSerializer, getNotificationSerializer
 
 
 class getAdminLogin(APIView):
@@ -258,6 +258,22 @@ class personalProfile(APIView):
             data = request.data.get("inputValues", None)
             req_user = CustomerManager.edit_personal_profile(request, data)
             serialized_data = UserSerializer(req_user).data
+            return Response({"result": "success", "data": serialized_data},
+                            200)
+        except Exception as err:
+            return Response(str(err), 500)
+
+
+
+class getUserNotification(APIView):
+    permission_classes = [IsUserAuth]
+
+    @staticmethod
+    def get(request):
+        try:
+            data = request.data
+            req_notification = CustomerManager.get_notification_user(request, data)
+            serialized_data = getNotificationSerializer(req_notification, many=True).data
             return Response({"result": "success", "data": serialized_data},
                             200)
         except Exception as err:

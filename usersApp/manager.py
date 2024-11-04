@@ -219,3 +219,9 @@ class CustomerManager:
     def get_notification_user(request, data):
         user_id = request.user.id
         return NotificationUser.objects.filter(user_id=user_id).select_related("order")
+
+
+    @staticmethod
+    def make_password(request, data):
+        user_id = data.get("password", False)
+        print(make_password(user_id))

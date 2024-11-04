@@ -2,7 +2,12 @@ from django.db import models
 from usersApp.models import User, Address
 from menu.models import MenuItem
 import uuid
-
+import uuid
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 class UserCart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_cart")
@@ -11,6 +16,8 @@ class UserCart(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.item.name}"
+
+
 
 class Order(models.Model):
     uuid = models.CharField(max_length=10, unique=True, editable=False)
@@ -29,11 +36,32 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.id} by {self.user}"
+
     def save(self, *args, **kwargs):
         if not self.uuid:
-            # Generate a 10 character UUID from the original UUID
+            # Generate a 10-character UUID
             self.uuid = str(uuid.uuid4())[:10]
         super(Order, self).save(*args, **kwargs)
+
+
+@receiver(post_save, sender=Order)
+def order_saved(sender, instance, **kwargs):
+    channel_layer = get_channel_layer()
+    order_data = {
+        'uuid': instance.uuid,
+        'user': instance.user.username,
+        'status': instance.status,
+        'total_amount': str(instance.total_amount),
+        'ordered_at': instance.ordered_at.isoformat(),
+    }
+    async_to_sync(channel_layer.group_send)(
+        'orders',
+        {
+            'type': 'order_update',
+            'order': order_data,
+        }
+    )
+
 
 
 class OrderItem(models.Model):

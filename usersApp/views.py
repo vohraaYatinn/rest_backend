@@ -279,3 +279,17 @@ class getUserNotification(APIView):
         except Exception as err:
             return Response(str(err), 500)
 
+
+
+class makePassword(APIView):
+
+    @staticmethod
+    def post(request):
+        try:
+            data = request.data
+            req_notification = CustomerManager.make_password(request, data)
+            return Response({"result": "success", "message": "serialized_data"},
+                            200)
+        except Exception as err:
+            return Response(str(err), 500)
+

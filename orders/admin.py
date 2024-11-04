@@ -1,4 +1,4 @@
-from .models import Order, OrderItem, OrderHistory, NotificationUser
+from .models import Order, OrderItem, OrderHistory, NotificationUser, UserCart
 from django.contrib import admin
 
 
@@ -11,3 +11,4 @@ admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderItem)
 admin.site.register(OrderHistory)
 admin.site.register(NotificationUser)
+admin.site.register(UserCart)

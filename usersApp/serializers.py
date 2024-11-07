@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from menu.models import MenuItem
-from orders.models import Order, OrderItem, NotificationUser
+from orders.models import Order, OrderItem, NotificationUser, AdminNotification
 from .models import User, Address
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -72,3 +72,12 @@ class getNotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotificationUser
         fields = "__all__"
+
+
+class NotificationAdmin(serializers.ModelSerializer):
+    order = OrdersSerializer()
+
+    class Meta:
+        model = AdminNotification
+        fields = "__all__"
+

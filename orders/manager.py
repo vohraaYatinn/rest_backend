@@ -3,8 +3,9 @@ from django.db.models import Q, Sum, F
 from django.utils import timezone
 from datetime import timedelta
 
+from restaurant.models import Restaurant
 from usersApp.models import Address
-from .models import Order, OrderHistory, UserCart, OrderItem, NotificationUser
+from .models import Order, OrderHistory, UserCart, OrderItem, NotificationUser, AdminNotification
 
 
 class OrderManager:
@@ -55,7 +56,28 @@ class OrderManager:
         orders[0].status = status
         orders[0].save()
         OrderHistory.objects.create(order=orders[0], status=status)
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('delivered', 'Delivered'),
+        ('cancelled', 'Cancelled'),
+        ('Ondelivery', 'Ondelivery'),
+        message = ""
+        admin_message = ""
+        if status == "accepted":
+            message = "Your Order has been accepted"
+            admin_message = f"Order #{orders[0].uuid} has been accepted"
+        elif status == "delivered":
+            message = "The Order has been delivered"
+            admin_message = f"Order #{orders[0].uuid} has been delivered"
+        elif status == "cancelled":
+            message = "The Order has been cancelled"
+            admin_message = f"Order #{orders[0].uuid} has been cancelled"
+        elif status == "Ondelivery":
+            message = "The Order has been out for delivery"
+            admin_message = f"Order #{orders[0].uuid} has been Ondelivery"
 
+        NotificationUser.objects.create(user=orders[0].user,message=message ,order=orders[0])
+        AdminNotification.objects.create(order=orders[0], description=admin_message)
         return orders
 
     @staticmethod
@@ -117,6 +139,9 @@ class OrderManager:
     @staticmethod
     @transaction.atomic()
     def place_order(request, data):
+        check_rest_online = Restaurant.objects.filter()[0]
+        if not check_rest_online.is_open:
+            raise Exception("The store is offline, Please try again later")
         user_id = request.user.id
         address = Address.objects.filter(user_id=user_id, is_active=True)
         cart_items = UserCart.objects.filter(user_id=user_id).select_related("item")

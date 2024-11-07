@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from usersApp.views import getCustomer, getAdminLogin, getAdminDashboard, AdminCharts, IsRestAvailable, SignupCustomer, \
     LoginCustomer, CustomerAppDashboard, getCustomerAddresses, addNewAddressCustomer, deleteAddressCustomer, \
-    defaultAddress, personalProfile, singleCustomerFetch, getUserNotification, makePassword
+    defaultAddress, personalProfile, singleCustomerFetch, getUserNotification, makePassword, NotificationAdminFetch
 
 urlpatterns = [
     # ------------ admin ----------------
@@ -14,6 +14,7 @@ urlpatterns = [
     path(r'admin-charts/', AdminCharts.as_view(), name="admin-charts"),
     path(r'is_rest_available/', IsRestAvailable.as_view(), name="is_rest_available"),
     path(r'single-customer-fetch/', singleCustomerFetch.as_view(), name="single-customer-fetch"),
+    path(r'notification-admin-fetch/', NotificationAdminFetch.as_view(), name="notification-admin-fetch"),
 
     # -------------- customer -------------
     path(r'sign-up-customer/', SignupCustomer.as_view(), name="sign-up-customer"),

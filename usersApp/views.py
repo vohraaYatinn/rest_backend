@@ -6,7 +6,7 @@ from menu.serializers import MenuItemSerializer, CategoryOnlySerializer, MenuRec
 from usersApp.custom_permission import IsAdminAuth, IsUserAuth
 from usersApp.manager import CustomerManager
 from usersApp.serializers import UserSerializer, UserAddressSerializer, UserOnlyAddressSerializer, \
-    AddressUserSerializer, UserSingleSerializer, getNotificationSerializer
+    AddressUserSerializer, UserSingleSerializer, getNotificationSerializer, NotificationAdmin
 
 
 class getAdminLogin(APIView):
@@ -115,6 +115,21 @@ class singleCustomerFetch(APIView):
             data = request.query_params
             customer_detail = CustomerManager.get_single_customer_detail(data)
             serialized_data = UserSingleSerializer(customer_detail).data
+            return Response({"result": "success", "data": serialized_data}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)
+
+
+
+class NotificationAdminFetch(APIView):
+    permission_classes = [IsAdminAuth]
+
+    @staticmethod
+    def get(request):
+        try:
+            customer_detail = CustomerManager.get_notification_fetch()
+            serialized_data = NotificationAdmin(customer_detail, many=True).data
             return Response({"result": "success", "data": serialized_data}, 200)
 
         except Exception as err:

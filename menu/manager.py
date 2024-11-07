@@ -5,6 +5,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from menu.models import Category, MenuItem
+from restaurant.models import Restaurant
 
 
 class MenuManager:
@@ -80,3 +81,7 @@ class MenuManager:
         if category_id:
             query &= Q(category_id=category_id)
         return MenuItem.objects.filter(query).select_related("category")
+
+    @staticmethod
+    def rest_offline_online_check():
+        return Restaurant.objects.filter()[0].is_open

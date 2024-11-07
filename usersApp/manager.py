@@ -5,7 +5,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from menu.models import Category, MenuRecommendation
-from orders.models import Order, NotificationUser
+from orders.models import Order, NotificationUser, AdminNotification
 from restaurant.models import Restaurant
 from usersApp.models import User, Address
 from django.contrib.auth.hashers import make_password
@@ -225,3 +225,8 @@ class CustomerManager:
     def make_password(request, data):
         user_id = data.get("password", False)
         print(make_password(user_id))
+
+
+    @staticmethod
+    def get_notification_fetch():
+        return AdminNotification.objects.filter().select_related("order").order_by("-stamp_at")[:10]

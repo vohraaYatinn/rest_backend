@@ -125,3 +125,15 @@ class fetchMenuByCategory(APIView):
 
         except Exception as err:
             return Response(str(err), 500)
+
+
+class checkRestOnline(APIView):
+
+    @staticmethod
+    def get(request):
+        try:
+            check_rest = MenuManager.rest_offline_online_check()
+            return Response({"result" : "success", "data":check_rest}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)

@@ -94,6 +94,7 @@ class OrderHistory(models.Model):
 class AdminNotification(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='admin_notification')
     description = models.TextField()
+    stamp_at = models.DateTimeField(auto_now_add=True, null=True)
 
 
 class NotificationUser(models.Model):

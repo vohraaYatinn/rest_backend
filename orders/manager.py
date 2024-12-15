@@ -2,7 +2,9 @@ from django.db import transaction
 from django.db.models import Q, Sum, F
 from django.utils import timezone
 from datetime import timedelta
-
+from django.db.models import Avg
+from django.db import transaction
+from django.db.models import F, Sum
 from restaurant.models import Restaurant
 from usersApp.models import Address
 from .models import Order, OrderHistory, UserCart, OrderItem, NotificationUser, AdminNotification
@@ -108,10 +110,17 @@ class OrderManager:
     def fetch_cart(request, data):
         user_id = request.user.id
         cart_items = UserCart.objects.filter(user_id=user_id)
-        total_amount = cart_items.aggregate(
-            total=Sum(F('quantity') * F('item__price'))
-        )['total'] or 0
+
+        total_amount = 0
+        for item in cart_items:
+            if item.item.is_buy_one:
+                payable_quantity = item.quantity - min(item.quantity // 2, 1)
+            else:
+                payable_quantity = item.quantity
+            total_amount += payable_quantity * item.item.price
+
         total_amount = round(total_amount, 2)
+
         address = Address.objects.filter(user_id=user_id, is_active=True)
         return cart_items, total_amount, address
 
@@ -136,25 +145,160 @@ class OrderManager:
         elif action == "delete":
             cart[0].delete()
 
+
+
     @staticmethod
-    @transaction.atomic()
-    def place_order(request, data):
-        check_rest_online = Restaurant.objects.filter()[0]
+    @transaction.atomic
+    def check_order_before_payment(request, data):
+        # Check if the restaurant is online
+        check_rest_online = Restaurant.objects.first()
         if not check_rest_online.is_open:
             raise Exception("The store is offline, Please try again later")
+
         user_id = request.user.id
+
+        # Fetch active address
         address = Address.objects.filter(user_id=user_id, is_active=True)
+        if not address.exists():
+            raise Exception("No active address found for the user")
+
+        # Fetch cart items with related item details
         cart_items = UserCart.objects.filter(user_id=user_id).select_related("item")
-        total_amount = cart_items.aggregate(
-            total=Sum(F('quantity') * F('item__price'))
-        )['total'] or 0
+        if not cart_items.exists():
+            raise Exception("Cart is empty. Please add items to your cart")
+
+        # Check for unavailable items in the cart
+        is_change_in_cart = False
+        for item in cart_items:
+            if not item.item.is_available:
+                is_change_in_cart = True
+                item.delete()  # Remove unavailable item from the cart
+
+        if is_change_in_cart:
+            raise Exception(
+                "Some items in your cart were not available and have been removed. Please review your cart.")
+
+        # Calculate total amount with "Buy 1 Get 1 Free" logic
+
+        # total_amount = 0
+        # for cart_item in cart_items:
+        #     if cart_item.item.is_buy_one:
+        #         # Payable quantity after considering free items
+        #         payable_quantity = cart_item.quantity - min(cart_item.quantity // 2, 1)
+        #     else:
+        #         payable_quantity = cart_item.quantity
+        #
+        #     # Add item total to the total amount
+        #     total_amount += payable_quantity * cart_item.item.price
+        #
+        # total_amount = round(total_amount, 2)
+        #
+        # # Create the Order
+        # order = Order.objects.create(
+        #     user_id=user_id,
+        #     address=address[0],
+        #     total_amount=total_amount
+        # )
+        #
+        # # Add items to the Order
+        # for cart_item in cart_items:
+        #     if cart_item.item.is_buy_one:
+        #         # Payable quantity after considering free items
+        #         payable_quantity = cart_item.quantity - min(cart_item.quantity // 2, 1)
+        #     else:
+        #         payable_quantity = cart_item.quantity
+        #
+        #     OrderItem.objects.create(
+        #         order=order,
+        #         item=cart_item.item,
+        #         quantity=payable_quantity,
+        #         price=cart_item.item.price
+        #     )
+        #
+        # # Clear the user's cart after placing the order
+        # UserCart.objects.filter(user_id=user_id).delete()
+        #
+        # # Log the order in OrderHistory
+        # OrderHistory.objects.create(order=order)
+        #
+        # # Notify the user about the successful order
+        # OrderManager.add_user_notification(user_id, "Order placed successfully", order=order)
+
+
+    @staticmethod
+    @transaction.atomic
+    def check_order_after_payment(request, data):
+        check_rest_online = Restaurant.objects.first()
+        # if not check_rest_online.is_open:
+        #     raise Exception("The store is offline, Please try again later")
+
+        user_id = request.user.id
+
+        # Fetch active address
+        address = Address.objects.filter(user_id=user_id, is_active=True)
+        # if not address.exists():
+        #     raise Exception("No active address found for the user")
+
+        # Fetch cart items with related item details
+        cart_items = UserCart.objects.filter(user_id=user_id).select_related("item")
+        # if not cart_items.exists():
+        #     raise Exception("Cart is empty. Please add items to your cart")
+
+        # Check for unavailable items in the cart
+        # is_change_in_cart = False
+        # for item in cart_items:
+        #     if not item.item.is_available:
+        #         is_change_in_cart = True
+        #         item.delete()  # Remove unavailable item from the cart
+        #
+        # if is_change_in_cart:
+        #     raise Exception(
+        #         "Some items in your cart were not available and have been removed. Please review your cart.")
+
+        total_amount = 0
+        for cart_item in cart_items:
+            if cart_item.item.is_buy_one:
+                # Payable quantity after considering free items
+                payable_quantity = cart_item.quantity - min(cart_item.quantity // 2, 1)
+            else:
+                payable_quantity = cart_item.quantity
+
+            # Add item total to the total amount
+            total_amount += payable_quantity * cart_item.item.price
+
         total_amount = round(total_amount, 2)
-        order = Order.objects.create(user_id=user_id, address=address[0], total_amount=total_amount)
-        for items in cart_items:
-            OrderItem.objects.create(order=order, item=items.item, quantity=items.quantity, price=items.item.price)
+
+        # Create the Order
+        order = Order.objects.create(
+            user_id=user_id,
+            address=address[0],
+            total_amount=total_amount
+        )
+
+        # Add items to the Order
+        for cart_item in cart_items:
+            if cart_item.item.is_buy_one:
+                # Payable quantity after considering free items
+                payable_quantity = cart_item.quantity - min(cart_item.quantity // 2, 1)
+            else:
+                payable_quantity = cart_item.quantity
+
+            OrderItem.objects.create(
+                order=order,
+                item=cart_item.item,
+                quantity=payable_quantity,
+                price=cart_item.item.price
+            )
+
+        # Clear the user's cart after placing the order
         UserCart.objects.filter(user_id=user_id).delete()
+
+        # Log the order in OrderHistory
         OrderHistory.objects.create(order=order)
-        OrderManager.add_user_notification(user_id, "Order placed Successfully", order=order)
+
+        # Notify the user about the successful order
+        OrderManager.add_user_notification(user_id, "Order placed successfully", order=order)
+
 
     @staticmethod
     def get_orders_customer(request, data):
@@ -168,3 +312,20 @@ class OrderManager:
             query &= Q(status = "delivered") | Q(status = "cancelled")
         return Order.objects.select_related("address").prefetch_related("order_items", "order_items__item").filter(
             query).order_by("-ordered_at")
+
+    @staticmethod
+    @transaction.atomic()
+    def add_review_in_order(request, data):
+        order = data.get("uuid", False)
+        rating = data.get("rating", False)
+        if not order or not rating:
+            raise Exception("Order id or rating is invalid")
+        req_order = Order.objects.get(id=order)
+        order_items = OrderItem.objects.filter(order_id=order).select_related("item")
+        for item in order_items:
+            item.rating = rating
+            item.save()
+            item.item.rating = OrderItem.objects.filter(item=item.item).aggregate(average_rating=Avg('rating'))['average_rating']
+            item.item.save()
+        req_order.rating = rating
+        req_order.save()

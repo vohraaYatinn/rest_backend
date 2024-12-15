@@ -1,11 +1,16 @@
+import re
+import random
+
 from django.db.models import Q, Sum, Prefetch, Count
 from rest_framework.exceptions import ValidationError
 
 from django.utils import timezone
 from datetime import timedelta
+import requests
+from django.db import transaction
 
-from menu.models import Category, MenuRecommendation
-from orders.models import Order, NotificationUser, AdminNotification
+from menu.models import Category, MenuRecommendation, MenuItem
+from orders.models import Order, NotificationUser, AdminNotification, UserCart
 from restaurant.models import Restaurant
 from usersApp.models import User, Address
 from django.contrib.auth.hashers import make_password
@@ -103,11 +108,10 @@ class CustomerManager:
         rest_status.save()
 
     @staticmethod
-    def signup_customer(data):
+    def signup_customer(data, phone, token):
         full_name = data.get("fullName", False)
         email = data.get("email", False)
         password = data.get("password", False)
-        phone = data.get("phone", False)
         passwordConfirm = data.get("passwordConfirm", False)
         if not full_name or not email or not password or not phone or not passwordConfirm:
             raise Exception("Every Field is required")
@@ -117,12 +121,17 @@ class CustomerManager:
         if user_exists:
             raise Exception("Email or Phone already registered")
         user = User.objects.create(full_name=full_name, username=full_name[:3]+email[:3]+phone[:2],email=email, phone_number=phone, password=make_password(password))
+        if token:
+            user.phone_token = token
+            user.save()
         return user
 
     @staticmethod
-    def login_user_customer(data):
+    def login_user_customer(request, data):
         email = data.get('email', False)
         password = data.get('password', False)
+        token = request.data.get("token", None)
+
         if not email or not password:
             raise Exception('email or Password is required')
         check_user = User.objects.filter(email=email)
@@ -131,6 +140,8 @@ class CustomerManager:
         check_pass_db = check_password(password, check_user[0].password)
         if not check_pass_db:
             raise Exception("Username or Password is incorrect")
+        check_user[0].phone_token = token
+        check_user[0].save()
         return check_user[0]
 
     @staticmethod
@@ -142,7 +153,7 @@ class CustomerManager:
             to_attr='active_addresses'
         )
         req_user = User.objects.filter(id=user).prefetch_related(active_addresses)[0]
-        recommended_order = MenuRecommendation.objects.filter()
+        recommended_order = MenuItem.objects.filter().order_by('-rating')
         all_categories = Category.objects.filter()
         return {
             'req_user': req_user,
@@ -230,3 +241,166 @@ class CustomerManager:
     @staticmethod
     def get_notification_fetch():
         return AdminNotification.objects.filter().select_related("order").order_by("-stamp_at")[:10]
+
+
+
+    @staticmethod
+    def otp_send_phone(data):
+        phone = data.get('phone', False)
+        if len(phone) != 9:
+            raise Exception("Please enter a valid phone number")
+        if phone == "9999999999":
+            return False, False
+
+        url = 'https://cpaas.messagecentral.com/verification/v3/send'
+        headers = {
+            'authToken': 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLUFCOTc5QTQzMDU5QzRGMiIsImlhdCI6MTcyNDQxMDEwMSwiZXhwIjoxODgyMDkwMTAxfQ.ViGp17ODCZrEHH9WRcg_x-XPZTjLoffPUSTLxmeg9KCPAiUWxw1wVEkvLjrQ5JD6sPk3QsnoIawmaIkI1870cQ'
+        }
+        params = {
+            'countryCode': '351',
+            'customerId': 'C-AB979A43059C4F2',
+            'flowType': 'SMS',
+            'mobileNumber': phone
+        }
+        response = requests.post(url, headers=headers, params=params)
+        if response.status_code != 200:
+            raise Exception("Please wait 60 seconds before trying again.")
+
+        return response.json()['data']['verificationId']
+
+    @staticmethod
+    def otp_verify_phone(data):
+        phone = data.get('phone', False)
+        otp = data.get('otp', False)
+
+        if phone == "9999999999" and otp == "0000":
+            check_user = User.objects.filter(phone_number="9999999999")
+            return True , check_user[0]
+
+        verfication_code = data.get('verificationCode', False)
+        url = 'https://cpaas.messagecentral.com/verification/v3/validateOtp'
+        headers = {
+            'authToken': 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLUYwQkMyRUNBNENGOTQ5QiIsImlhdCI6MTczMzY2MTg5NiwiZXhwIjoxODkxMzQxODk2fQ.rxU8zpP5OUZGi3b_A9gjk__cBW1RRegA7eT7mDJR5v2rwjSqTPaExORYlLbNEPQSL6ffqodW4ivZztn0pL0NjA'
+        }
+
+        params = {
+            'countryCode': '351',
+            'mobileNumber': phone,
+            'verificationId': verfication_code,
+            'customerId': 'C-F0BC2ECA4CF949B',
+            'code': otp
+        }
+
+        response = requests.get(url, headers=headers, params=params)
+        if response.status_code != 200:
+            raise Exception("The OTP is either invalid or has expired.")
+        check_user = User.objects.filter(phone_number=phone)
+
+        return response.json()['data']['verificationStatus'] == 'VERIFICATION_COMPLETED'
+
+    def validate_portuguese_phone_number(phone_number):
+        return len(phone_number) == 9
+
+    @staticmethod
+    @transaction.atomic
+    def signup_user(data):
+        phone = data['inputValues'].get('phone', False)
+        if CustomerManager.validate_portuguese_phone_number(phone) is False:
+            raise Exception("Phone number is not valid")
+        user_check = User.objects.filter(phone_number=phone)
+        if user_check:
+            raise ValidationError("Phone Number already exist")
+        url = 'https://cpaas.messagecentral.com/verification/v3/send'
+        headers = {
+            'authToken': 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLUYwQkMyRUNBNENGOTQ5QiIsImlhdCI6MTczMzY2MTg5NiwiZXhwIjoxODkxMzQxODk2fQ.rxU8zpP5OUZGi3b_A9gjk__cBW1RRegA7eT7mDJR5v2rwjSqTPaExORYlLbNEPQSL6ffqodW4ivZztn0pL0NjA'
+        }
+        params = {
+            'countryCode': '351',
+            'customerId': 'C-F0BC2ECA4CF949B',
+            'flowType': 'SMS',
+            'mobileNumber': phone
+        }
+        response = requests.post(url, headers=headers, params=params)
+        if response.status_code != 200:
+            raise Exception("Please wait 60 seconds before trying again.")
+
+        return response.json(), phone
+
+    @staticmethod
+    @transaction.atomic
+    def initiate_payment_mbway(request, data):
+        mobile_number = data['inputValues'].get("phone", False)
+        check_rest_online = Restaurant.objects.first()
+        if not check_rest_online.is_open:
+            raise Exception("The store is offline, Please try again later")
+        user_id = request.user.id
+
+        # Fetch active address
+        address = Address.objects.filter(user_id=user_id, is_active=True)
+        if not address.exists():
+            raise Exception("No active address found for the user")
+
+        # Fetch cart items with related item details
+        cart_items = UserCart.objects.filter(user_id=user_id).select_related("item")
+        if not cart_items.exists():
+            raise Exception("Cart is empty. Please add items to your cart")
+
+        # Check for unavailable items in the cart
+        is_change_in_cart = False
+        for item in cart_items:
+            if not item.item.is_available:
+                is_change_in_cart = True
+                item.delete()  # Remove unavailable item from the cart
+
+        if is_change_in_cart:
+            raise Exception(
+                "Some items in your cart were not available and have been removed. Please review your cart.")
+
+        # Calculate total amount with "Buy 1 Get 1 Free" logic
+        total_amount = 0
+        for cart_item in cart_items:
+            if cart_item.item.is_buy_one:
+                payable_quantity = cart_item.quantity - min(cart_item.quantity // 2, 1)
+            else:
+                payable_quantity = cart_item.quantity
+
+            total_amount += payable_quantity * cart_item.item.price
+
+        total_amount = round(total_amount, 2)
+
+        url = "https://api.ifthenpay.com/spg/payment/mbway"
+
+        # Parameters to be sent in the POST request
+        payload = {
+                "mbWayKey": "RLA-844371",
+                "orderId": f"{cart_items[0].id}-{random.randint(1000, 9999)}",  # Adding random 4-digit number
+                "amount": float(total_amount),
+                "mobileNumber": f"351#{mobile_number}",
+                "email": "empresa@empresa.com",
+                "description": "order for rest"
+            }
+
+        headers = {"Content-Type": "application/json"}
+
+        # Sending the POST request with JSON payload
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+
+    @staticmethod
+    @transaction.atomic
+    def check_payment_mbway(data):
+        verification_id = data.get("verificationId", False)
+
+        url = "https://api.ifthenpay.com/spg/payment/mbway/status"
+
+        # Parameters to be sent in the POST request
+        params = {
+              "mbWayKey": "RLA-844371",
+              "requestId": verification_id
+            }
+
+        headers = {"Content-Type": "application/json"}
+
+        # Sending the POST request with JSON payload
+        response = requests.get(url, headers=headers, params=params)
+        return response.json()

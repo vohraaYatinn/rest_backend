@@ -3,7 +3,7 @@ from django.contrib import admin
 
 
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'ordered_at', 'total_amount', 'status')  # Include datetime field
+    list_display = ('id', 'user', 'ordered_at', 'total_amount', 'status', 'rating')  # Include datetime field
     fields = ('user', 'address', 'ordered_at', 'total_amount', 'status')  # Fields to display in the detail view
     readonly_fields = ('ordered_at', 'uuid')  # Make these fields read-only if necessary
 

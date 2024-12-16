@@ -95,14 +95,29 @@ class IncrementCartAction(APIView):
             return Response(str(err), 500)
 
 
-class PlaceOrder(APIView):
+class PlaceOrderBeforePayment(APIView):
     permission_classes = [IsUserAuth]
 
     @staticmethod
     def post(request):
         try:
             data = request.data
-            cart_data = OrderManager.place_order(request, data)
+            cart_data = OrderManager.check_order_before_payment(request, data)
+            return Response({"result" : "success", "message":"Your order placed successfully"}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)
+
+
+
+class PlaceOrderAfterPayment(APIView):
+    permission_classes = [IsUserAuth]
+
+    @staticmethod
+    def post(request):
+        try:
+            data = request.data
+            check_order = OrderManager.check_order_after_payment(request, data)
             return Response({"result" : "success", "message":"Your order placed successfully"}, 200)
 
         except Exception as err:
@@ -134,6 +149,19 @@ class fetchNotificationUser(APIView):
             order_details = OrderManager.get_orders_customer(request, data)
             serializer_data = OrderSerializer(order_details, many=True).data
             return Response({"result" : "success", "data":serializer_data}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)
+
+class SetReviewRating(APIView):
+    permission_classes = [IsUserAuth]
+
+    @staticmethod
+    def post(request):
+        try:
+            data = request.data
+            order_review = OrderManager.add_review_in_order(request, data)
+            return Response({"result" : "success", "message":"Thank you! Your review has been successfully submitted."}, 200)
 
         except Exception as err:
             return Response(str(err), 500)

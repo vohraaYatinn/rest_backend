@@ -14,6 +14,7 @@ class User(models.Model):
     password = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
+    phone_token = models.TextField(null=True, blank=True)
     ordered_at = models.DateTimeField(auto_now_add=True, null=True)
 
 

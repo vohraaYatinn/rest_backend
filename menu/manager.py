@@ -69,7 +69,7 @@ class MenuManager:
     @staticmethod
     def fetch_all_menu_items(data):
         search = data.get("search", False)
-        query = Q(is_available=True)
+        query = Q()
         if search:
             query &= Q(name__icontains=search)
         return MenuItem.objects.filter(query).select_related("category")
@@ -77,7 +77,7 @@ class MenuManager:
     @staticmethod
     def search_by_category(data):
         category_id = data.get("categoryId", False)
-        query = Q(is_available=True)
+        query = Q()
         if category_id:
             query &= Q(category_id=category_id)
         return MenuItem.objects.filter(query).select_related("category")

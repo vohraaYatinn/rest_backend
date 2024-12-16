@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import OrderViewSet, OrderView, OrderStatusChange, FetchSingleOrder, AddToCart, FetchCustomerCart, \
-    IncrementCartAction, PlaceOrder, FetchCustomerApp, fetchNotificationUser
+    IncrementCartAction, FetchCustomerApp, fetchNotificationUser, SetReviewRating, PlaceOrderBeforePayment, \
+    PlaceOrderAfterPayment
 
 router = DefaultRouter()
 router.register(r'orders', OrderViewSet)
@@ -17,9 +18,11 @@ urlpatterns = [
     path(r'add-to-cart/', AddToCart.as_view(), name="add-to-cart"),
     path(r'fetch-customer-cart/', FetchCustomerCart.as_view(), name="fetch-customer-cart"),
     path(r'customer-cart-action/', IncrementCartAction.as_view(), name="customer-cart-action"),
-    path(r'place-order/', PlaceOrder.as_view(), name="place-order"),
+    path(r'place-order-before-payment/', PlaceOrderBeforePayment.as_view(), name="place-order"),
     path(r'fetch-customer-order/', FetchCustomerApp.as_view(), name="fetch-customer-order"),
     path(r'get-single-order/', FetchCustomerApp.as_view(), name="get-single-order"),
     path(r'get-order-notification/', fetchNotificationUser.as_view(), name="get-order-notification"),
+    path(r'add-new-review/', SetReviewRating.as_view(), name="add-new-review"),
+    path(r'place-order-after-payment/', PlaceOrderAfterPayment.as_view(), name="order-after-payment"),
 
 ]

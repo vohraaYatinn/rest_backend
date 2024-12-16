@@ -145,7 +145,9 @@ class SignupCustomer(APIView):
     def post(request):
         try:
             data = request.data.get("inputValues", None)
-            signup_customer = CustomerManager.signup_customer(data)
+            phone = request.data.get("phone", None)
+            token = request.data.get("token", None)
+            signup_customer = CustomerManager.signup_customer(data, phone, token)
             serialized_data = UserSerializer(signup_customer).data
             payload = {
                 'user': signup_customer.id
@@ -163,7 +165,7 @@ class LoginCustomer(APIView):
     def post(request):
         try:
             data = request.data.get("inputValues", None)
-            user_exist = CustomerManager.login_user_customer(data)
+            user_exist = CustomerManager.login_user_customer(request, data)
             serialized_data = UserSerializer(user_exist).data
             payload = {
                 'user': user_exist.id
@@ -184,7 +186,7 @@ class CustomerAppDashboard(APIView):
             data = request.data
             dashboard_data = CustomerManager.fetch_dashboard_data(request, data)
             user_serialized_data = UserOnlyAddressSerializer(dashboard_data['req_user']).data
-            recommended_serialized_data = MenuRecommendationSerializer(dashboard_data['recommended_order'], many=True).data
+            recommended_serialized_data = MenuItemSerializer(dashboard_data['recommended_order'], many=True).data
             all_categories_serialized_data = CategoryOnlySerializer(dashboard_data['all_categories'], many=True).data
             return Response({"result": "success", "data": {
                 "user":user_serialized_data,
@@ -307,4 +309,69 @@ class makePassword(APIView):
                             200)
         except Exception as err:
             return Response(str(err), 500)
+
+
+# Create your views here.
+class OtpVerification(APIView):
+    # permission_classes = [IsAuthenticated]
+    @staticmethod
+    def post(request):
+        try:
+            data = request.data
+            verification_code = CustomerManager.otp_send_phone(data)
+            return Response({"result" : "success", "verification_code":verification_code}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)
+
+    @staticmethod
+    def get(request):
+        try:
+            data = request.query_params
+            verification_verify = CustomerManager.otp_verify_phone(data)
+
+            return Response({"result" : "success", "data":verification_verify}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)
+
+
+# Create your views here.
+class SignupApi(APIView):
+    @staticmethod
+    def post(request):
+        try:
+            data = request.data
+            verification_code, phone = CustomerManager.signup_user(data)
+            return Response({"result" : "success", "verification_code":verification_code['data']['verificationId'], "phone":phone}, 200)
+
+        except Exception as err:
+            return Response({"result" : "failure", "message":str(err)}, 200)
+
+
+class InitiateMbWayPayment(APIView):
+    permission_classes = [IsUserAuth]
+
+    @staticmethod
+    def post(request):
+        try:
+            data = request.data
+            response = CustomerManager.initiate_payment_mbway(request, data)
+            return Response({"result" : "success", "response":response}, 200)
+
+        except Exception as err:
+            return Response({"result" : "failure", "message":str(err)}, 200)
+
+
+
+class CheckPaymentStatus(APIView):
+    @staticmethod
+    def get(request):
+        try:
+            data = request.query_params
+            response = CustomerManager.check_payment_mbway(data)
+            return Response({"result" : "success", "response":response}, 200)
+
+        except Exception as err:
+            return Response({"result" : "failure", "message":str(err)}, 200)
 

@@ -25,6 +25,7 @@ class Order(models.Model):
     address = models.ForeignKey(Address, on_delete=models.CASCADE)
     ordered_at = models.DateTimeField(auto_now_add=True, null=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    rating = models.IntegerField( default=0)
     status_choices = [
         ('pending', 'Pending'),
         ('accepted', 'Accepted'),
@@ -69,6 +70,8 @@ class OrderItem(models.Model):
     item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
     price = models.FloatField()
+    rating = models.IntegerField(default=0)
+
 
     def __str__(self):
         return f"{self.quantity} x {self.item.name}"

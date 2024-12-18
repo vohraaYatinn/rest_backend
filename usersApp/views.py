@@ -375,3 +375,30 @@ class CheckPaymentStatus(APIView):
         except Exception as err:
             return Response({"result" : "failure", "message":str(err)}, 200)
 
+
+# Create your views here.
+class ForgotPasswordOtpSend(APIView):
+    @staticmethod
+    def post(request):
+        try:
+            data = request.data
+            verification_code, phone = CustomerManager.forgot_password_otp_send(data)
+            return Response({"result" : "success", "verification_code":verification_code['data']['verificationId'], "phone":phone}, 200)
+
+        except Exception as err:
+            return Response({"result" : "failure", "message":str(err)}, 200)
+
+
+class ChangePasswordForgot(APIView):
+
+    @staticmethod
+    def post(request):
+        try:
+            data = request.data.get("inputValues", None)
+            phone = request.data.get("phone", None)
+            pass_change = CustomerManager.change_password_after_forgot(data, phone)
+            return Response({"result": "success", "message": "Password changed successfully"}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)
+

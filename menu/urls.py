@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import CategoryViewSet, MenuItemViewSet, MenuView, CategoryView, ChangeAvailablity, DeleteCategoryView, \
-    SingleMenuItem, fetchAllMenuItems, fetchMenuByCategory, checkRestOnline
+    SingleMenuItem, fetchAllMenuItems, fetchMenuByCategory, checkRestOnline, getAllSideItems
 
 router = DefaultRouter()
 router.register(r'categories', CategoryViewSet)
@@ -21,5 +21,6 @@ urlpatterns = [
     path(r'get-all-menu-items/', fetchAllMenuItems.as_view(), name="get-all-menu-items"),
     path(r'category-menu/', fetchMenuByCategory.as_view(), name="category-menu"),
     path(r'check-rest-online/', checkRestOnline.as_view(), name="check-rest-online"),
+    path(r'get-all-side-items/', getAllSideItems.as_view(), name="get-all-side-items"),
 
 ]

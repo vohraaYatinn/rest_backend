@@ -6,7 +6,8 @@ from django.db.models import Avg
 from django.db import transaction
 from django.db.models import F, Sum
 from restaurant.models import Restaurant
-from usersApp.models import Address
+from usersApp.models import Address, User
+from .firebaseSdk import send_notification
 from .models import Order, OrderHistory, UserCart, OrderItem, NotificationUser, AdminNotification
 
 

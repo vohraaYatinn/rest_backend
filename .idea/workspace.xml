@@ -5,19 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="cdef3d3c-92c8-4628-b883-e74152036a7d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/orders/firebaseSdk.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/menu/manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/menu/manager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/menu/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/menu/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/orders/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/orders/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/menu/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/menu/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/menu/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/menu/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/orders/firebaseSdk.py" beforeDir="false" afterPath="$PROJECT_DIR$/orders/firebaseSdk.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/orders/manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/orders/manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/orders/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/orders/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/orders/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/orders/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/orders/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/orders/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rest_backend/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/rest_backend/settings.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/usersApp/manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/usersApp/manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/usersApp/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/usersApp/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/usersApp/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/usersApp/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/usersApp/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/usersApp/views.py" afterDir="false" />
     </list>
@@ -140,7 +136,9 @@
       <workItem from="1733896802425" duration="13000" />
       <workItem from="1733897035319" duration="7535000" />
       <workItem from="1734233708162" duration="1591000" />
-      <workItem from="1734257291730" duration="4509000" />
+      <workItem from="1734257291730" duration="5703000" />
+      <workItem from="1734327094634" duration="2475000" />
+      <workItem from="1734495785880" duration="9921000" />
     </task>
     <servers />
   </component>
@@ -172,28 +170,23 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/orders/manager.py</url>
-          <line>322</line>
+          <line>323</line>
           <option name="timeStamp" value="8" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/usersApp/manager.py</url>
-          <line>331</line>
+          <line>348</line>
           <option name="timeStamp" value="16" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/usersApp/manager.py</url>
-          <line>385</line>
+          <line>402</line>
           <option name="timeStamp" value="18" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/usersApp/manager.py</url>
-          <line>130</line>
-          <option name="timeStamp" value="23" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/rest_backend$manage.coverage" NAME="manage Coverage Results" MODIFIED="1734260295513" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/rest_backend$manage.coverage" NAME="manage Coverage Results" MODIFIED="1734509326300" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
   </component>
 </project>

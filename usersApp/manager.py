@@ -126,6 +126,16 @@ class CustomerManager:
             user.save()
         return user
 
+    def is_phone_number(value):
+        """Check if the value is a valid phone number."""
+        phone_regex = r'^\+?\d{9,15}$'  # Simple regex to check phone numbers, adjust as needed
+        return re.match(phone_regex, value)
+
+    def is_email(value):
+        """Check if the value is a valid email address."""
+        email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'  # Simple regex to check emails, adjust as needed
+        return re.match(email_regex, value)
+
     @staticmethod
     def login_user_customer(request, data):
         email = data.get('email', False)
@@ -134,7 +144,14 @@ class CustomerManager:
 
         if not email or not password:
             raise Exception('email or Password is required')
-        check_user = User.objects.filter(email=email)
+        # Validate and perform the appropriate query
+        if CustomerManager.is_phone_number(email):
+            check_user = User.objects.filter(Q(phone_number=email))
+        elif CustomerManager.is_email(email):
+            check_user = User.objects.filter(Q(email=email))
+        else:
+            raise ValidationError("Invalid email or phone number format")
+
         if not check_user:
             raise Exception("No Such User Exist with this username")
         check_pass_db = check_password(password, check_user[0].password)
@@ -404,3 +421,45 @@ class CustomerManager:
         # Sending the POST request with JSON payload
         response = requests.get(url, headers=headers, params=params)
         return response.json()
+
+
+
+    @staticmethod
+    @transaction.atomic
+    def forgot_password_otp_send(data):
+        phone = data['inputValues'].get('phone', False)
+        if CustomerManager.validate_portuguese_phone_number(phone) is False:
+            raise Exception("Phone number is not valid")
+        user_check = User.objects.filter(phone_number=phone)
+        if not user_check:
+            raise ValidationError("no account is associated with this phone number")
+        url = 'https://cpaas.messagecentral.com/verification/v3/send'
+        headers = {
+            'authToken': 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLUYwQkMyRUNBNENGOTQ5QiIsImlhdCI6MTczMzY2MTg5NiwiZXhwIjoxODkxMzQxODk2fQ.rxU8zpP5OUZGi3b_A9gjk__cBW1RRegA7eT7mDJR5v2rwjSqTPaExORYlLbNEPQSL6ffqodW4ivZztn0pL0NjA'
+        }
+        params = {
+            'countryCode': '351',
+            'customerId': 'C-F0BC2ECA4CF949B',
+            'flowType': 'SMS',
+            'mobileNumber': phone
+        }
+        response = requests.post(url, headers=headers, params=params)
+        if response.status_code != 200:
+            raise Exception("Please wait 60 seconds before trying again.")
+
+        return response.json(), phone
+
+
+    @staticmethod
+    def change_password_after_forgot(data, phone):
+        password = data.get("password", False)
+        passwordConfirm = data.get("passwordConfirm", False)
+        if not password or not passwordConfirm:
+            raise Exception("Every Field is required")
+        if password != passwordConfirm:
+            raise Exception("Passwords do not match")
+        user_exists = User.objects.filter(Q(phone_number=phone))
+        if not user_exists:
+            raise Exception("There is some error please try again later")
+        user_exists[0].password = make_password(password)
+        user_exists[0].save()

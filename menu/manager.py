@@ -75,6 +75,10 @@ class MenuManager:
         return MenuItem.objects.filter(query).select_related("category")
 
     @staticmethod
+    def get_all_side_items(data):
+        return MenuItem.objects.filter(side_on=True).select_related("category")
+
+    @staticmethod
     def search_by_category(data):
         category_id = data.get("categoryId", False)
         query = Q()

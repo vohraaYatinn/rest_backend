@@ -137,3 +137,18 @@ class checkRestOnline(APIView):
 
         except Exception as err:
             return Response(str(err), 500)
+
+
+
+class getAllSideItems(APIView):
+
+    @staticmethod
+    def get(request):
+        try:
+            data = request.query_params
+            menu_item = MenuManager.get_all_side_items(data)
+            serialized_data = MenuItemCategorySerializer(menu_item, many=True).data
+            return Response({"result" : "success", "data":serialized_data}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)

@@ -15,6 +15,7 @@ class MenuItem(models.Model):
     rating = models.IntegerField( default=0)
     is_available = models.BooleanField(default=True)
     is_buy_one = models.BooleanField(default=False)
+    side_on = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

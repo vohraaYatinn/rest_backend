@@ -89,3 +89,25 @@ class MenuManager:
     @staticmethod
     def rest_offline_online_check():
         return Restaurant.objects.filter()[0].is_open
+
+
+    @staticmethod
+    def change_buy_one_get_one(data):
+        id = data.get("id", False)
+        if not id:
+            raise Exception("id is required")
+        menu_item = MenuItem.objects.filter(id=id)
+        if menu_item:
+            menu_item[0].is_buy_one = not menu_item[0].is_buy_one
+            menu_item[0].save()
+
+
+    @staticmethod
+    def change_is_add_on(data):
+        id = data.get("id", False)
+        if not id:
+            raise Exception("id is required")
+        menu_item = MenuItem.objects.filter(id=id)
+        if menu_item:
+            menu_item[0].side_on = not menu_item[0].side_on
+            menu_item[0].save()

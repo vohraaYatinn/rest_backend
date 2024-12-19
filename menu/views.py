@@ -152,3 +152,33 @@ class getAllSideItems(APIView):
 
         except Exception as err:
             return Response(str(err), 500)
+
+
+
+
+class ChangeOneBuyOne(APIView):
+
+    @staticmethod
+    def post(request):
+        try:
+            data = request.data
+            change_availability = MenuManager.change_buy_one_get_one(data)
+            return Response({"result" : "success", "message":"Status of the item changed successfully"}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)
+
+
+
+
+class ChangeToAddonlist(APIView):
+
+    @staticmethod
+    def post(request):
+        try:
+            data = request.data
+            change_availability = MenuManager.change_is_add_on(data)
+            return Response({"result" : "success", "message":"Status of the item changed successfully"}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)

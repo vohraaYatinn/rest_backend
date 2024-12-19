@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import CategoryViewSet, MenuItemViewSet, MenuView, CategoryView, ChangeAvailablity, DeleteCategoryView, \
-    SingleMenuItem, fetchAllMenuItems, fetchMenuByCategory, checkRestOnline, getAllSideItems
+    SingleMenuItem, fetchAllMenuItems, fetchMenuByCategory, checkRestOnline, getAllSideItems, ChangeToAddonlist, \
+    ChangeOneBuyOne
 
 router = DefaultRouter()
 router.register(r'categories', CategoryViewSet)
@@ -15,6 +16,8 @@ urlpatterns = [
     path(r'add-category/', CategoryView.as_view(), name="add-category"),
     path(r'delete-category/', DeleteCategoryView.as_view(), name="delete-category"),
     path(r'change-availability/', ChangeAvailablity.as_view(), name="change-availability"),
+    path(r'change-buy-one-get-one/', ChangeOneBuyOne.as_view(), name="change-buy-one-get-one"),
+    path(r'change-add-on/', ChangeToAddonlist.as_view(), name="change-add-on"),
 
     # customer
     path(r'single-menu-item/', SingleMenuItem.as_view(), name="single-menu-item"),

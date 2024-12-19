@@ -15,6 +15,7 @@ from restaurant.models import Restaurant
 from usersApp.models import User, Address
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.hashers import check_password
+from django.db.models import Case, When, Value, IntegerField
 
 
 class CustomerManager:
@@ -170,12 +171,18 @@ class CustomerManager:
             to_attr='active_addresses'
         )
         req_user = User.objects.filter(id=user).prefetch_related(active_addresses)[0]
-        recommended_order = MenuItem.objects.filter().order_by('-rating')
+        recommended_order = MenuItem.objects.annotate(
+                        is_buy_one_priority=Case(
+                            When(is_buy_one=True, then=Value(1)),
+                            default=Value(0),
+                            output_field=IntegerField()
+                        )
+                    ).order_by('-is_buy_one_priority', '-rating')
         all_categories = Category.objects.filter()
         return {
             'req_user': req_user,
             'recommended_order': recommended_order,
-            'all_categories':all_categories
+            'all_categories': all_categories
         }
 
 

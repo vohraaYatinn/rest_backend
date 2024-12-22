@@ -46,10 +46,10 @@ class CustomerManager:
         )
         if search:
             users = User.objects.filter(
-                Q(username__icontains=search) |
+                Q(full_name__icontains=search) |
                 Q(email__icontains=search) |
                 Q(phone_number__icontains=search)
-            ).annotate(total_orders=Count('order')).prefetch_related(active_addresses)
+            ).annotate(total_orders=Count('user_order')).prefetch_related(active_addresses)
         else:
             users = User.objects.all().annotate(total_orders=Count('user_order')).prefetch_related(active_addresses)
 

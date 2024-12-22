@@ -153,7 +153,7 @@ class SignupCustomer(APIView):
                 'user': signup_customer.id
             }
             token = jwt.encode(payload, 'secretKeyRight34', algorithm='HS256')
-            return Response({"result": "success", "message": "signup successful", "user": serialized_data, "token": token}, 200)
+            return Response({"result": "success", "message": "inscrição bem sucedida", "user": serialized_data, "token": token}, 200)
 
         except Exception as err:
             return Response(str(err), 500)
@@ -171,7 +171,7 @@ class LoginCustomer(APIView):
                 'user': user_exist.id
             }
             token = jwt.encode(payload, 'secretKeyRight34', algorithm='HS256')
-            return Response({"result": "success","message":"login successful", "user": serialized_data, "token": token},
+            return Response({"result": "success","message":"login bem-sucedido", "user": serialized_data, "token": token},
                             200)
         except Exception as err:
             return Response(str(err), 500)
@@ -220,7 +220,7 @@ class addNewAddressCustomer(APIView):
         try:
             data = request.data.get("inputValues", None)
             CustomerManager.add_new_customer_address(request, data)
-            return Response({"result": "success", "message": "New Address has been added successfully"},
+            return Response({"result": "success", "message": "O novo endereço foi adicionado com sucesso"},
                             200)
         except Exception as err:
             return Response(str(err), 500)
@@ -233,7 +233,7 @@ class deleteAddressCustomer(APIView):
         try:
             data = request.data
             CustomerManager.delete_customer_address(request, data)
-            return Response({"result": "success", "message": "Address deleted successfully"},
+            return Response({"result": "success", "message": "Endereço eliminado com sucesso"},
                             200)
         except Exception as err:
             return Response(str(err), 500)
@@ -247,7 +247,7 @@ class defaultAddress(APIView):
         try:
             data = request.data
             CustomerManager.change_default_address(request, data)
-            return Response({"result": "success", "message": "Default Address changed successfully"},
+            return Response({"result": "success", "message": "Endereço padrão alterado com sucesso"},
                             200)
         except Exception as err:
             return Response(str(err), 500)
@@ -397,7 +397,7 @@ class ChangePasswordForgot(APIView):
             data = request.data.get("inputValues", None)
             phone = request.data.get("phone", None)
             pass_change = CustomerManager.change_password_after_forgot(data, phone)
-            return Response({"result": "success", "message": "Password changed successfully"}, 200)
+            return Response({"result": "success", "message": "Palavra-passe alterada com sucesso"}, 200)
 
         except Exception as err:
             return Response(str(err), 500)

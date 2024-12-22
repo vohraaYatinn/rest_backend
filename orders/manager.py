@@ -39,7 +39,7 @@ class OrderManager:
             query &= Q(ordered_at__range=(yesterday_start, yesterday_end))
 
         # Fetch the orders based on the query
-        orders = Order.objects.select_related("address").prefetch_related("order_items", "order_items__item").filter(query).order_by("-ordered_at")
+        orders = Order.objects.select_related("address").prefetch_related("order_items", "order_items__item").select_related("user").filter(query).order_by("-ordered_at")
         return orders
 
     @staticmethod
@@ -49,14 +49,16 @@ class OrderManager:
         status = data.get("status", False)
 
         if not order_id or not status:
-            raise Exception("order_id or status is required")
+            raise Exception("order_id ou status é obrigatório")
 
         orders = Order.objects.filter(uuid=order_id)
         if not orders:
-            raise Exception("order id is invalid")
+            raise Exception("o ID do pedido é inválido")
         if orders[0].status == status:
-            raise Exception("order status is already updated")
+            raise Exception("o estado do pedido já está atualizado")
         orders[0].status = status
+        if not orders[0].is_attended:
+            orders[0].is_attended = True
         orders[0].save()
         OrderHistory.objects.create(order=orders[0], status=status)
         ('pending', 'Pending'),
@@ -89,7 +91,7 @@ class OrderManager:
         query = Q()
         query &= Q(uuid=order_uuid) | Q(id=order_uuid)
         if not order_uuid:
-            raise Exception("order_id is required")
+            raise Exception("order_id é obrigatório")
         orders = Order.objects.filter(query).select_related("user","address").prefetch_related("order_items", "order_items__item", "order_history")
         return orders
 
@@ -99,7 +101,7 @@ class OrderManager:
         menu = data.get("menuId", False)
         quantity = data.get("quantity", False)
         if not menu or not quantity:
-            raise Exception("order_id is required")
+            raise Exception("order_id é obrigatório")
         item = UserCart.objects.filter(user_id=user_id, item_id=menu)
         if item:
             item[0].quantity += quantity
@@ -132,7 +134,7 @@ class OrderManager:
         action = data.get("action", False)
         cart = UserCart.objects.filter(id=cart_id, user_id=user_id)
         if not cart:
-            raise Exception("There is something issue with your cart")
+            raise Exception("Há algo de errado com o seu carrinho")
         if action == "decrement":
             cart[0].quantity = cart[0].quantity - 1
             if cart[0].quantity == 0:
@@ -154,19 +156,19 @@ class OrderManager:
         # Check if the restaurant is online
         check_rest_online = Restaurant.objects.first()
         if not check_rest_online.is_open:
-            raise Exception("The store is offline, Please try again later")
+            raise Exception("A loja está offline.")
 
         user_id = request.user.id
 
         # Fetch active address
         address = Address.objects.filter(user_id=user_id, is_active=True)
         if not address.exists():
-            raise Exception("No active address found for the user")
+            raise Exception("Nenhum endereço ativo encontrado para o utilizador")
 
         # Fetch cart items with related item details
         cart_items = UserCart.objects.filter(user_id=user_id).select_related("item")
         if not cart_items.exists():
-            raise Exception("Cart is empty. Please add items to your cart")
+            raise Exception("O carrinho está vazio. Por favor adicione artigos ao seu carrinho")
 
         # Check for unavailable items in the cart
         is_change_in_cart = False
@@ -229,7 +231,7 @@ class OrderManager:
     @staticmethod
     @transaction.atomic
     def check_order_after_payment(request, data):
-        check_rest_online = Restaurant.objects.first()
+        # check_rest_online = Restaurant.objects.first()
         # if not check_rest_online.is_open:
         #     raise Exception("The store is offline, Please try again later")
 
@@ -298,7 +300,7 @@ class OrderManager:
         OrderHistory.objects.create(order=order)
 
         # Notify the user about the successful order
-        OrderManager.add_user_notification(user_id, "Order placed successfully", order=order)
+        OrderManager.add_user_notification(user_id, "Pedido realizado com sucesso", order=order)
 
 
     @staticmethod
@@ -316,17 +318,55 @@ class OrderManager:
 
     @staticmethod
     @transaction.atomic()
-    def add_review_in_order(request, data):
+    def change_order_attended(data):
         order = data.get("uuid", False)
-        rating = data.get("rating", False)
-        if not order or not rating:
-            raise Exception("Order id or rating is invalid")
-        req_order = Order.objects.get(id=order)
-        order_items = OrderItem.objects.filter(order_id=order).select_related("item")
-        for item in order_items:
-            item.rating = rating
-            item.save()
-            item.item.rating = OrderItem.objects.filter(item=item.item).aggregate(average_rating=Avg('rating'))['average_rating']
-            item.item.save()
-        req_order.rating = rating
-        req_order.save()
+        if not order:
+            raise Exception("Order id is invalid")
+        Order_obj = Order.objects.filter(id=order)
+        if not Order_obj:
+            raise Exception("Order id is invalid")
+        Order_obj[0].is_attended = True
+        Order_obj[0].save()
+
+    @staticmethod
+    @transaction.atomic
+    def order_status_change(data):
+        order_id = data.get("uuid", False)
+        status = data.get("status", False)
+
+        if not order_id or not status:
+            raise Exception("order_id ou status é obrigatório")
+
+        orders = Order.objects.filter(uuid=order_id)
+        if not orders:
+            raise Exception("o ID do pedido é inválido")
+        if orders[0].status == status:
+            raise Exception("o estado do pedido já está atualizado")
+        orders[0].status = status
+        if not orders[0].is_attended:
+            orders[0].is_attended = True
+        orders[0].save()
+        OrderHistory.objects.create(order=orders[0], status=status)
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('delivered', 'Delivered'),
+        ('cancelled', 'Cancelled'),
+        ('Ondelivery', 'Ondelivery'),
+        message = ""
+        admin_message = ""
+        if status == "accepted":
+            message = "Your Order has been accepted"
+            admin_message = f"Order #{orders[0].uuid} has been accepted"
+        elif status == "delivered":
+            message = "The Order has been delivered"
+            admin_message = f"Order #{orders[0].uuid} has been delivered"
+        elif status == "cancelled":
+            message = "The Order has been cancelled"
+            admin_message = f"Order #{orders[0].uuid} has been cancelled"
+        elif status == "Ondelivery":
+            message = "The Order has been out for delivery"
+            admin_message = f"Order #{orders[0].uuid} has been Ondelivery"
+
+        NotificationUser.objects.create(user=orders[0].user,message=message ,order=orders[0])
+        AdminNotification.objects.create(order=orders[0], description=admin_message)
+        return orders

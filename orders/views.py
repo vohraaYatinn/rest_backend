@@ -4,7 +4,7 @@ from usersApp.custom_permission import IsUserAuth
 from .manager import OrderManager
 from .models import Order
 from .serializers import OrderSerializer, OrderItemSerializer, OrderAllDetailsSerializer, UserCartSerializer, \
-    AddressSerializer
+    AddressSerializer, OrderSerializerWithUser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -20,7 +20,7 @@ class OrderView(APIView):
         try:
             data = request.query_params
             order_details = OrderManager.order_fetch(data)
-            serializer_data = OrderSerializer(order_details, many=True).data
+            serializer_data = OrderSerializerWithUser(order_details, many=True).data
             return Response({"result" : "success", "data":serializer_data}, 200)
 
         except Exception as err:
@@ -167,3 +167,14 @@ class SetReviewRating(APIView):
             return Response(str(err), 500)
 
 
+
+class changeOrderAttended(APIView):
+    @staticmethod
+    def post(request):
+        try:
+            data = request.data
+            order_details = OrderManager.change_order_attended(data)
+            return Response({"result" : "success", "message":"Order Marked Attended"}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)

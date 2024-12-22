@@ -1,15 +1,17 @@
 from rest_framework import serializers
 
-from usersApp.models import Address
+from usersApp.models import Address, User
 from usersApp.serializers import UserSerializer
 from .models import Order, OrderItem, OrderHistory, UserCart
 from menu.serializers import MenuItemSerializer
+
 
 class AddressSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Address
         fields = "__all__"
+
 
 class OrderItemSerializer(serializers.ModelSerializer):
     item = MenuItemSerializer()
@@ -21,6 +23,15 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     address = AddressSerializer()
     order_items = OrderItemSerializer(many=True)
+
+    class Meta:
+        model = Order
+        fields = "__all__"
+
+class OrderSerializerWithUser(serializers.ModelSerializer):
+    address = AddressSerializer()
+    order_items = OrderItemSerializer(many=True)
+    user = UserSerializer()
 
     class Meta:
         model = Order

@@ -25,13 +25,13 @@ class CustomerManager:
         username = data.get('username', False)
         password = data.get('password', False)
         if not username or not password:
-            raise Exception('Username or Password is required')
+            raise Exception('Nome de utilizador ou palavra-passe é obrigatório')
         check_user = User.objects.filter(username=username)
         if not check_user:
-            raise Exception("No Such User Exist with this username")
+            raise Exception("Não existe tal utilizador com este nome de utilizador")
         check_pass_db = check_password(password, check_user[0].password)
         if not check_pass_db:
-            raise Exception("Username or Password is incorrect")
+            raise Exception("Nome de utilizador ou palavra-passe está incorreto")
         return check_user[0]
 
     @staticmethod
@@ -59,7 +59,7 @@ class CustomerManager:
     def action_customer(data):
         user_id = data.get('userId', False)
         if not user_id:
-            raise Exception("UserId is required")
+            raise Exception("O ID do utilizador é obrigatório")
         users = User.objects.filter(id=user_id)
         if users:
             users[0].is_active = not users[0].is_active
@@ -100,7 +100,7 @@ class CustomerManager:
     def change_rest_status(data):
         status = data.get("status", False)
         if not status or status not in ['closed', 'open']:
-            raise Exception("status not provided")
+            raise Exception("estado não fornecido")
         rest_status = Restaurant.objects.filter()[0]
         if status == "closed":
             rest_status.is_open = False
@@ -115,12 +115,12 @@ class CustomerManager:
         password = data.get("password", False)
         passwordConfirm = data.get("passwordConfirm", False)
         if not full_name or not email or not password or not phone or not passwordConfirm:
-            raise Exception("Every Field is required")
+            raise Exception("Cada campo é de preenchimento obrigatório")
         if password != passwordConfirm:
-            raise Exception("Passwords do not match")
+            raise Exception("As senhas não coincidem")
         user_exists = User.objects.filter(Q(email=email) | Q(phone_number=phone)).exists()
         if user_exists:
-            raise Exception("Email or Phone already registered")
+            raise Exception("E-mail ou telefone já registado")
         user = User.objects.create(full_name=full_name, username=full_name[:3]+email[:3]+phone[:2],email=email, phone_number=phone, password=make_password(password))
         if token:
             user.phone_token = token
@@ -144,7 +144,7 @@ class CustomerManager:
         token = request.data.get("token", None)
 
         if not email or not password:
-            raise Exception('email or Password is required')
+            raise Exception('e-mail ou palavra-passe é obrigatório')
         # Validate and perform the appropriate query
         if CustomerManager.is_phone_number(email):
             check_user = User.objects.filter(Q(phone_number=email))
@@ -154,10 +154,10 @@ class CustomerManager:
             raise ValidationError("Invalid email or phone number format")
 
         if not check_user:
-            raise Exception("No Such User Exist with this username")
+            raise Exception("Não existe tal utilizador com este nome de utilizador")
         check_pass_db = check_password(password, check_user[0].password)
         if not check_pass_db:
-            raise Exception("Username or Password is incorrect")
+            raise Exception("Nome de utilizador ou palavra-passe está incorreto")
         check_user[0].phone_token = token
         check_user[0].save()
         return check_user[0]
@@ -205,7 +205,7 @@ class CustomerManager:
         if check_already_address:
             is_active = False
         if not street or  not address or not postalCode or not name or not city:
-            raise Exception("Please provide all the details")
+            raise Exception("Forneça todos os detalhes")
         req_address = Address.objects.create(user_id=user, name=name, street=street, zip_code=postalCode, city=city, is_active=is_active)
         return req_address
 
@@ -214,7 +214,7 @@ class CustomerManager:
         user = request.user.id
         address_id = data.get('addressId', False)
         if not address_id:
-            raise Exception("address id not provided")
+            raise Exception("ID de endereço não fornecido")
         Address.objects.filter(id=address_id, user_id=user).delete()
 
     @staticmethod
@@ -222,7 +222,7 @@ class CustomerManager:
         user = request.user.id
         address_id = data.get('addressId', False)
         if not address_id:
-            raise Exception("address id not provided")
+            raise Exception("ID de endereço não fornecido")
         address = Address.objects.filter(user_id=user).update(is_active=False)
         new_default = Address.objects.get(id=address_id, user_id=user)
         new_default.is_active = True
@@ -245,7 +245,7 @@ class CustomerManager:
     def get_single_customer_detail(data):
         customer_id = data.get('customerId', False)
         if not customer_id:
-            raise Exception("Customer id not provided")
+            raise Exception("ID do cliente não fornecido")
         user = User.objects.filter(id=customer_id).prefetch_related("addresses").prefetch_related("user_order", "user_order__order_items")
         return user[0]
 
@@ -272,7 +272,7 @@ class CustomerManager:
     def otp_send_phone(data):
         phone = data.get('phone', False)
         if len(phone) != 9:
-            raise Exception("Please enter a valid phone number")
+            raise Exception("Por favor introduza um número de telefone válido")
         if phone == "9999999999":
             return False, False
 
@@ -288,7 +288,7 @@ class CustomerManager:
         }
         response = requests.post(url, headers=headers, params=params)
         if response.status_code != 200:
-            raise Exception("Please wait 60 seconds before trying again.")
+            raise Exception("Aguarde 60 segundos antes de tentar novamente.")
 
         return response.json()['data']['verificationId']
 
@@ -317,7 +317,7 @@ class CustomerManager:
 
         response = requests.get(url, headers=headers, params=params)
         if response.status_code != 200:
-            raise Exception("The OTP is either invalid or has expired.")
+            raise Exception("A OTP é inválida ou está caducada.")
         check_user = User.objects.filter(phone_number=phone)
 
         return response.json()['data']['verificationStatus'] == 'VERIFICATION_COMPLETED'
@@ -330,7 +330,7 @@ class CustomerManager:
     def signup_user(data):
         phone = data['inputValues'].get('phone', False)
         if CustomerManager.validate_portuguese_phone_number(phone) is False:
-            raise Exception("Phone number is not valid")
+            raise Exception("O número de telefone não é válido")
         user_check = User.objects.filter(phone_number=phone)
         if user_check:
             raise ValidationError("Phone Number already exist")
@@ -346,7 +346,7 @@ class CustomerManager:
         }
         response = requests.post(url, headers=headers, params=params)
         if response.status_code != 200:
-            raise Exception("Please wait 60 seconds before trying again.")
+            raise Exception("Aguarde 60 segundos antes de tentar novamente.")
 
         return response.json(), phone
 
@@ -356,19 +356,18 @@ class CustomerManager:
         mobile_number = data['inputValues'].get("phone", False)
         check_rest_online = Restaurant.objects.first()
         if not check_rest_online.is_open:
-            raise Exception("The store is offline, Please try again later")
+            raise Exception("A loja está offline.")
         user_id = request.user.id
 
         # Fetch active address
         address = Address.objects.filter(user_id=user_id, is_active=True)
         if not address.exists():
-            raise Exception("No active address found for the user")
+            raise Exception("Nenhum endereço ativo encontrado para o utilizador")
 
         # Fetch cart items with related item details
         cart_items = UserCart.objects.filter(user_id=user_id).select_related("item")
         if not cart_items.exists():
-            raise Exception("Cart is empty. Please add items to your cart")
-
+            raise Exception("O carrinho está vazio. Por favor adicione artigos ao seu carrinho")
         # Check for unavailable items in the cart
         is_change_in_cart = False
         for item in cart_items:
@@ -400,7 +399,6 @@ class CustomerManager:
                 "orderId": f"{cart_items[0].id}-{random.randint(1000, 9999)}",  # Adding random 4-digit number
                 "amount": float(total_amount),
                 "mobileNumber": f"351#{mobile_number}",
-                "email": "empresa@empresa.com",
                 "description": "order for rest"
             }
 
@@ -436,7 +434,7 @@ class CustomerManager:
     def forgot_password_otp_send(data):
         phone = data['inputValues'].get('phone', False)
         if CustomerManager.validate_portuguese_phone_number(phone) is False:
-            raise Exception("Phone number is not valid")
+            raise Exception("O número de telefone não é válido")
         user_check = User.objects.filter(phone_number=phone)
         if not user_check:
             raise ValidationError("no account is associated with this phone number")
@@ -452,7 +450,7 @@ class CustomerManager:
         }
         response = requests.post(url, headers=headers, params=params)
         if response.status_code != 200:
-            raise Exception("Please wait 60 seconds before trying again.")
+            raise Exception("Aguarde 60 segundos antes de tentar novamente.")
 
         return response.json(), phone
 
@@ -462,9 +460,9 @@ class CustomerManager:
         password = data.get("password", False)
         passwordConfirm = data.get("passwordConfirm", False)
         if not password or not passwordConfirm:
-            raise Exception("Every Field is required")
+            raise Exception("Cada campo é de preenchimento obrigatório")
         if password != passwordConfirm:
-            raise Exception("Passwords do not match")
+            raise Exception("As senhas não coincidem")
         user_exists = User.objects.filter(Q(phone_number=phone))
         if not user_exists:
             raise Exception("There is some error please try again later")

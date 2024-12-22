@@ -182,3 +182,34 @@ class ChangeToAddonlist(APIView):
 
         except Exception as err:
             return Response(str(err), 500)
+
+
+
+
+class EditMenuView(APIView):
+
+    @staticmethod
+    def post(request):
+        try:
+            data = request.data
+            MenuManager.edit_menu_item(data)
+            return Response({"result" : "success", "message":"Menu Item edited successfully"}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)
+
+
+
+class GetSingleItemDetail(APIView):
+
+    @staticmethod
+    def get(request):
+        try:
+            data = request.query_params
+            menu_item = MenuManager.get_single_menu_item(data)
+            serialized_data = MenuItemCategorySerializer(menu_item).data
+            return Response({"result" : "success", "data":serialized_data}, 200)
+
+        except Exception as err:
+            return Response(str(err), 500)
+

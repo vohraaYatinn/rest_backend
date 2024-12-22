@@ -19,17 +19,17 @@ class MenuManager:
     def add_category(data):
         category_name = data.get("name")
         if not category_name:
-            raise Exception("Category name is required")
+            raise Exception("O nome da categoria é obrigatório")
         category = Category.objects.filter(name=category_name)
         if category.exists():
-            raise Exception("Category already exists")
+            raise Exception("A categoria já existe")
         Category.objects.create(name=category_name)
 
     @staticmethod
     def delete_category(data):
         category_id = data.get("id")
         if not category_id:
-            raise Exception("Category id is required")
+            raise Exception("O ID da categoria é obrigatório")
         Category.objects.filter(id=category_id).delete()
 
     @staticmethod
@@ -37,7 +37,7 @@ class MenuManager:
         id = data.get("id", False)
         action = data.get("action", False)
         if not id or not action:
-            raise Exception("id and action are required")
+            raise Exception("id e ação são necessários")
         bool_flag = False
         if action == "available":
             bool_flag = True
@@ -63,8 +63,8 @@ class MenuManager:
     def get_single_menu_item(data):
         menu_id = data.get("menuId", False)
         if not menu_id:
-            raise Exception("menuId is required")
-        return MenuItem.objects.get(id=menu_id)
+            raise Exception("O menuId é obrigatório")
+        return MenuItem.objects.select_related("category").get(id=menu_id)
 
     @staticmethod
     def fetch_all_menu_items(data):
@@ -95,7 +95,7 @@ class MenuManager:
     def change_buy_one_get_one(data):
         id = data.get("id", False)
         if not id:
-            raise Exception("id is required")
+            raise Exception("a identificação é obrigatória")
         menu_item = MenuItem.objects.filter(id=id)
         if menu_item:
             menu_item[0].is_buy_one = not menu_item[0].is_buy_one
@@ -106,8 +106,33 @@ class MenuManager:
     def change_is_add_on(data):
         id = data.get("id", False)
         if not id:
-            raise Exception("id is required")
+            raise Exception("a identificação é obrigatória")
         menu_item = MenuItem.objects.filter(id=id)
         if menu_item:
             menu_item[0].side_on = not menu_item[0].side_on
             menu_item[0].save()
+
+
+    @staticmethod
+    def edit_menu_item(data):
+        id = data.get("id", False)
+        name = data.get("ProductName", False)
+        description = data.get("Description", False)
+        price = data.get("Price", False)
+        category = data.get("Category", False)
+        img = data.get("img", False)
+        menu_items = MenuItem.objects.filter(id=id)
+        if not menu_items:
+            raise Exception("Item de menu não encontrado")
+        if name:
+            menu_items[0].name = name
+        if description:
+            menu_items[0].description = description
+        if price:
+            menu_items[0].price = price
+        if category:
+            category_id = Category.objects.get(name=category)
+            menu_items[0].category_id = category_id
+        if img:
+            menu_items[0].image = img
+        menu_items[0].save()

@@ -26,6 +26,7 @@ class Order(models.Model):
     ordered_at = models.DateTimeField(auto_now_add=True, null=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     rating = models.IntegerField( default=0)
+    is_attended = models.BooleanField(default=False)
     status_choices = [
         ('pending', 'Pending'),
         ('accepted', 'Accepted'),

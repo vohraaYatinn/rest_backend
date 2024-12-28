@@ -22,11 +22,15 @@ class OrderManager:
     @staticmethod
     def order_fetch(data):
         day = data.get("day[label]", False)
+        date = data.get("date", False)
         if day == False:
             day = "Today"
         query = Q()
 
-        if day == "Today":
+        if date:
+            query = Q(ordered_at__date=date)
+
+        elif day == "Today":
             # Get the start and end of today
             today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
             today_end = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)

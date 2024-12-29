@@ -34,6 +34,13 @@ class Order(models.Model):
         ('cancelled', 'Cancelled'),
         ('Ondelivery', 'Ondelivery'),
     ]
+    payment_status_choices = [
+        ('pending', 'Pending'),
+        ('success', 'Success'),
+        ('failed', 'Failed'),
+    ]
+    payment_status = models.CharField(max_length=10, choices=payment_status_choices)
+    payment_reference_number = models.CharField(max_length=15, null=True)
     status = models.CharField(max_length=10, choices=status_choices, default='pending')
 
     def __str__(self):

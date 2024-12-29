@@ -43,7 +43,7 @@ class OrderManager:
             query &= Q(ordered_at__range=(yesterday_start, yesterday_end))
 
         # Fetch the orders based on the query
-        orders = Order.objects.select_related("address").prefetch_related("order_items", "order_items__item").select_related("user").filter(query).order_by("-ordered_at")
+        orders = Order.objects.filter(payment_status="success").select_related("address").prefetch_related("order_items", "order_items__item").select_related("user").filter(query).order_by("-ordered_at")
         return orders
 
     @staticmethod
@@ -318,7 +318,7 @@ class OrderManager:
         elif status == "history":
             query &= Q(status = "delivered") | Q(status = "cancelled")
         return Order.objects.select_related("address").prefetch_related("order_items", "order_items__item").filter(
-            query).order_by("-ordered_at")
+            query).filter(payment_status="success").order_by("-ordered_at")
 
     @staticmethod
     @transaction.atomic()

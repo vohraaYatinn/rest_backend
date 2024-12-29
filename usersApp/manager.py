@@ -10,7 +10,7 @@ import requests
 from django.db import transaction
 
 from menu.models import Category, MenuRecommendation, MenuItem
-from orders.models import Order, NotificationUser, AdminNotification, UserCart
+from orders.models import Order, NotificationUser, AdminNotification, UserCart, OrderItem
 from restaurant.models import Restaurant
 from usersApp.models import User, Address
 from django.contrib.auth.hashers import make_password
@@ -67,8 +67,8 @@ class CustomerManager:
 
     @staticmethod
     def get_dashboard_data(data):
-        total_orders = Order.objects.count()
-        total_revenue = Order.objects.aggregate(total_revenue=Sum('total_amount'))['total_revenue']
+        total_orders = Order.objects.filter(payment_status="success").count()
+        total_revenue = Order.objects.filter(payment_status="success").aggregate(total_revenue=Sum('total_amount'))['total_revenue']
         total_customers = User.objects.filter(user_order__isnull=False).distinct().count()
         return {
             'total_orders': total_orders,
@@ -78,7 +78,7 @@ class CustomerManager:
 
     @staticmethod
     def get_admin_charts(data):
-        total_orders = Order.objects.count()
+        total_orders = Order.objects.filter(payment_status="success").count()
         on_delivery = Order.objects.filter(status='Ondelivery').count()
         delivered = Order.objects.filter(status='delivered').count()
         cancelled = Order.objects.filter(status='cancelled').count()
@@ -381,15 +381,25 @@ class CustomerManager:
 
         # Calculate total amount with "Buy 1 Get 1 Free" logic
         total_amount = 0
+        order = Order.objects.create(
+            user_id=user_id,
+            address=address[0],
+            total_amount=total_amount
+        )
         for cart_item in cart_items:
             if cart_item.item.is_buy_one:
                 payable_quantity = cart_item.quantity - min(cart_item.quantity // 2, 1)
             else:
                 payable_quantity = cart_item.quantity
-
+            OrderItem.objects.create(
+                order=order,
+                item=cart_item.item,
+                quantity=payable_quantity,
+                price=cart_item.item.price
+            )
             total_amount += payable_quantity * cart_item.item.price
-
         total_amount = round(total_amount, 2)
+        order.total_amount = total_amount
 
         url = "https://api.ifthenpay.com/spg/payment/mbway"
 
@@ -399,13 +409,18 @@ class CustomerManager:
                 "orderId": f"{cart_items[0].id}-{random.randint(1000, 9999)}",  # Adding random 4-digit number
                 "amount": float(total_amount),
                 "mobileNumber": f"351#{mobile_number}",
-                "description": "order for rest"
+                "description": "order for rest",
+            "callbackUrl": "https://2a41-2405-201-400f-a852-78ff-31cf-f55e-ab51.ngrok-free.app/api/users/hello"
             }
-
         headers = {"Content-Type": "application/json"}
 
         # Sending the POST request with JSON payload
         response = requests.post(url, headers=headers, json=payload)
+        response = response.json()
+        if response['Message'] == "Success":
+            order.payment_status = "pending"
+            order.payment_reference_number = response['RequestId']
+        order.save()
         return response.json()
 
     @staticmethod

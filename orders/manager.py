@@ -235,74 +235,16 @@ class OrderManager:
     @staticmethod
     @transaction.atomic
     def check_order_after_payment(request, data):
-        # check_rest_online = Restaurant.objects.first()
-        # if not check_rest_online.is_open:
-        #     raise Exception("The store is offline, Please try again later")
-
+        verification_id = data.get("verificationId", False)
         user_id = request.user.id
-
-        # Fetch active address
-        address = Address.objects.filter(user_id=user_id, is_active=True)
-        # if not address.exists():
-        #     raise Exception("No active address found for the user")
-
-        # Fetch cart items with related item details
-        cart_items = UserCart.objects.filter(user_id=user_id).select_related("item")
-        # if not cart_items.exists():
-        #     raise Exception("Cart is empty. Please add items to your cart")
-
-        # Check for unavailable items in the cart
-        # is_change_in_cart = False
-        # for item in cart_items:
-        #     if not item.item.is_available:
-        #         is_change_in_cart = True
-        #         item.delete()  # Remove unavailable item from the cart
-        #
-        # if is_change_in_cart:
-        #     raise Exception(
-        #         "Some items in your cart were not available and have been removed. Please review your cart.")
-
-        total_amount = 0
-        for cart_item in cart_items:
-            if cart_item.item.is_buy_one:
-                # Payable quantity after considering free items
-                payable_quantity = cart_item.quantity - min(cart_item.quantity // 2, 1)
-            else:
-                payable_quantity = cart_item.quantity
-
-            # Add item total to the total amount
-            total_amount += payable_quantity * cart_item.item.price
-
-        total_amount = round(total_amount, 2)
-
-        # Create the Order
-        order = Order.objects.create(
-            user_id=user_id,
-            address=address[0],
-            total_amount=total_amount
+        order = Order.objects.get(
+            payment_reference_number=verification_id
         )
-
-        # Add items to the Order
-        for cart_item in cart_items:
-            if cart_item.item.is_buy_one:
-                # Payable quantity after considering free items
-                payable_quantity = cart_item.quantity - min(cart_item.quantity // 2, 1)
-            else:
-                payable_quantity = cart_item.quantity
-
-            OrderItem.objects.create(
-                order=order,
-                item=cart_item.item,
-                quantity=payable_quantity,
-                price=cart_item.item.price
-            )
-
-        # Clear the user's cart after placing the order
+        order.payment_status = "success"
+        order.save()
         UserCart.objects.filter(user_id=user_id).delete()
-
         # Log the order in OrderHistory
         OrderHistory.objects.create(order=order)
-
         # Notify the user about the successful order
         OrderManager.add_user_notification(user_id, "Pedido realizado com sucesso", order=order)
 

@@ -421,7 +421,7 @@ class CustomerManager:
             order.payment_status = "pending"
             order.payment_reference_number = response['RequestId']
         order.save()
-        return response.json()
+        return response, order.id
 
     @staticmethod
     @transaction.atomic

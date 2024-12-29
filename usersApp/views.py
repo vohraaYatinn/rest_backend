@@ -10,7 +10,6 @@ from usersApp.serializers import UserSerializer, UserAddressSerializer, UserOnly
 
 
 class getAdminLogin(APIView):
-
     @staticmethod
     def post(request):
         try:
@@ -356,8 +355,8 @@ class InitiateMbWayPayment(APIView):
     def post(request):
         try:
             data = request.data
-            response = CustomerManager.initiate_payment_mbway(request, data)
-            return Response({"result" : "success", "response":response}, 200)
+            response, order_id = CustomerManager.initiate_payment_mbway(request, data)
+            return Response({"result" : "success", "response":response, "order_id":order_id}, 200)
 
         except Exception as err:
             return Response({"result" : "failure", "message":str(err)}, 200)
@@ -370,6 +369,8 @@ class CheckPaymentStatus(APIView):
         try:
             data = request.query_params
             response = CustomerManager.check_payment_mbway(data)
+
+            response['Message'] = "Success"
             return Response({"result" : "success", "response":response}, 200)
 
         except Exception as err:

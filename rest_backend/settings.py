@@ -148,7 +148,7 @@ import os
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
-ALLOWED_HOSTS = ["localhost","192.168.29.217","192.168.1.16", "192.168.29.217", "127.0.0.1","192.168.1.3", "192.168.1.7", "0.0.0.0", "16.170.252.56", "192.168.1.6", "192.168.29.217", "192.168.1.5", "180.188.226.29", "admin.osmagalhaes.pt", "2a41-2405-201-400f-a852-78ff-31cf-f55e-ab51.ngrok-free.app"]
+ALLOWED_HOSTS = ["localhost","192.168.29.217","192.168.1.16", "192.168.29.217", "127.0.0.1","192.168.1.3", "192.168.1.7", "0.0.0.0", "16.170.252.56", "192.168.1.6", "192.168.29.217", "192.168.1.5", "180.188.226.29", "admin.osmagalhaes.pt"]
 ASGI_APPLICATION = 'rest_backend.asgi.application'
 
 # Configure Redis as the channel layer for real-time communication

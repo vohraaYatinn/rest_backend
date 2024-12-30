@@ -1,7 +1,7 @@
 import sys
 from django.utils import timezone
 
-sys.path.insert(0, '../../')
+sys.path.insert(0, '/root/rest_backend/')
 import os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'rest_backend.settings')
 import django

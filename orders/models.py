@@ -9,15 +9,25 @@ from django.dispatch import receiver
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
+
 class UserCart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_cart")
     item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
+    verification_number = models.CharField(max_length=20, null=True)
 
     def __str__(self):
         return f"{self.quantity} x {self.item.name}"
+    
 
+class ScriptMessage(models.Model):
+    message = models.TextField()
+    status = models.CharField(max_length=100)
+    stamp_at = models.DateTimeField(auto_now_add=True, null=True)
 
+    def __str__(self):
+        return f"{self.message}"
+    
 
 class Order(models.Model):
     uuid = models.CharField(max_length=10, unique=True, editable=False)

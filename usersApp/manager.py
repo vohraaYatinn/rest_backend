@@ -406,7 +406,10 @@ class CustomerManager:
 
         # Sending the POST request with JSON payload
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        response_json = response.json()
+        if response_json.get('Message', False) == "Success" and response_json.get('RequestId', False):
+            cart_items.update(verification_number = response_json['RequestId'])
+        return response_json
 
     @staticmethod
     @transaction.atomic
